@@ -84,7 +84,7 @@ function filterUsers() {
         // Nəticələri uyğunluq dərəcəsinə görə sırala
         matches.sort((a, b) => b.level - a.level);
 
-        // Nəticələri göstər
+        // Nəticələri göstə
         matches.forEach(match => {
             match.row.style.display = '';
             
