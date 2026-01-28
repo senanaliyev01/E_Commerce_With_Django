@@ -592,11 +592,6 @@ def get_search_filtered_products(queryset, search_query):
     queryset = queryset.annotate(
         search_text=Concat(
             'adi', Value(' '),
-            'brend_kod', Value(' '),
-            'firma__adi', Value(' '),
-            'avtomobil__adi', Value(' '),
-            'kodlar', Value(' '),
-            'olcu', Value(' '),
             'melumat',
             output_field=CharField()
         )
