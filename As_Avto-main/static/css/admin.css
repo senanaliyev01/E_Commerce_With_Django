@@ -1,0 +1,509 @@
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.statistics-container {
+    display: none;
+    margin-bottom: 20px;
+}
+
+.show-stats-btn {
+    background-color: #417690;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-left: 50px;
+}
+
+.show-stats-btn:hover {
+    background-color: #2b5172;
+}
+
+.module {
+    margin-bottom: 20px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.stats-header {
+    background: #417690;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 4px 4px 0 0;
+}
+
+.stats-content {
+    padding: 15px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.stats-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: center;
+    border: 2px solid;
+}
+
+.stats-item.orders {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.stats-item.total {
+    border-color: #007bff;
+    background-color: rgba(0, 123, 255, 0.1);
+}
+
+.stats-item.paid {
+    border-color: #28a745;
+    background-color: rgba(23, 162, 184, 0.1);
+}
+
+.stats-item.debt {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.stats-item strong {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.stats-item span {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.stats-item.orders span { color: #28a745; }
+.stats-item.total span { color: #007bff; }
+.stats-item.paid span { color: #28a745; }
+.stats-item.debt span { color: #dc3545; }
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats-table th {
+    background: #f8f9fa;
+    color: #666;
+    padding: 12px;
+    text-align: left;
+    border-bottom: 2px solid #ddd;
+}
+
+.stats-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    color: #333;
+}
+
+.stats-table .amount { color: #007bff; }
+.stats-table .paid { color: #28a745; }
+.stats-table .debt { 
+    background-color: transparent;
+}
+
+.stats-table .debt.positive { 
+    color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.stats-table .debt.negative { 
+    color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.stats-table .debt.zero { 
+    color: #6c757d;
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+/* Ümumi statistika üçün */
+.stats-item.debt.positive {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.stats-item.debt.positive span {
+    color: #dc3545;
+}
+
+.stats-item.debt.negative {
+    border-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.1);
+}
+
+.stats-item.debt.negative span {
+    color: #28a745;
+}
+
+.stats-item.debt.zero {
+    border-color: #6c757d;
+    background-color: rgba(108, 117, 125, 0.1);
+}
+
+.stats-item.debt.zero span {
+    color: #6c757d;
+}
+
+.search-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #666;
+    font-size: 16px;
+}
+
+.clear-search {
+    position: absolute;
+    right: 12px;
+    color: #666;
+    font-size: 16px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    display: none;
+}
+
+.clear-search:hover {
+    color: #dc3545;
+}
+
+.search-input {
+    flex: 1;
+    padding: 10px 35px 10px 35px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    width: 100%;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #417690;
+    box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2);
+}
+
+.search-input::placeholder {
+    color: #999;
+}
+
+.highlight {
+    background-color: #fff3cd;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+.no-results {
+    display: none;
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    font-style: italic;
+    background: #f8f9fa;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+/* Excel Import Modal Styles */
+.modal-content {
+    animation: slideIn 0.3s ease-out;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.table-responsive {
+    max-width: 100%;
+    margin-bottom: 15px;
+    overflow-y: hidden;
+    -ms-overflow-style: -ms-autohiding-scrollbar;
+    border: 1px solid #ddd;
+}
+
+.sample-table {
+    font-size: 13px;
+}
+
+.sample-table th {
+    white-space: nowrap;
+    font-weight: 600;
+}
+
+.sample-table td {
+    white-space: nowrap;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+.close:hover {
+    color: #000;
+}
+
+/* Success Message */
+.success-message {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #c3e6cb;
+    border-radius: 4px;
+}
+
+/* Error Message */
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    border-radius: 4px;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    overflow-y: auto;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 1200px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.modal-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #417690;
+    font-size: 1.5em;
+}
+
+.close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close:hover {
+    color: #000;
+}
+
+.excel-sample {
+    margin-bottom: 20px;
+}
+
+.excel-sample h4 {
+    color: #417690;
+    margin-bottom: 10px;
+}
+
+.sample-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.sample-table th {
+    background-color: #417690;
+    color: white;
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.sample-table td {
+    padding: 8px;
+    border: 1px solid #ddd;
+}
+
+.notes {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+}
+
+.notes p {
+    margin: 0;
+    color: #666;
+}
+
+.notes ul {
+    margin: 10px 0 0 0;
+    padding-left: 20px;
+    color: #666;
+}
+
+.file-input-container {
+    margin-bottom: 20px;
+}
+
+.file-input-container input[type="file"] {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.button-container {
+    text-align: right;
+}
+
+.closeBtn {
+    margin-right: 10px;
+    padding: 8px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.submit-btn {
+    padding: 8px 15px;
+    background-color: #417690;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.import-button-container {
+    margin-bottom: 20px;
+}
+
+.import-btn {
+    padding: 10px 15px;
+    background-color: #417690;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.import-btn i {
+    margin-right: 5px;
+}
+
+/* PDF Export Button Styles */
+.pdf-export-btn {
+    display: inline-flex;
+    align-items: center;
+    background-color: #2B5173;
+    color: #ffffff !important;
+    padding: 8px 15px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid #1e3c5a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-right: 10px;
+}
+
+.pdf-export-btn:hover {
+    color: #ffffff !important;
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background-color: #2B5173;
+}
+
+.pdf-export-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pdf-export-btn i {
+    margin-right: 8px;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.object-tools-items {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+/* PDF Export Button in Admin List */
+.object-tools a.pdf-export-btn {
+    margin-left: 10px;
+    height: auto;
+    line-height: normal;
+    list-style: none;
+}
+
+.object-tools a.pdf-export-btn::before {
+    display: none !important;
+}
+
+.object-tools a.pdf-export-btn:hover {
+    background-color: #1e3c5a;
+}

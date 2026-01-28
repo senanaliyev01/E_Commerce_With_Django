@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AS-AVTO - Qeydiyyat</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+</head>
+<body>
+    <div class="login-page">
+        <div class="contact-section">
+            <h2 class="contact-title">Müştərimiz olmaq istəyirsiniz?</h2>
+            <p class="contact-subtitle">AS-AVTO-nun peşəkar komandası ilə əməkdaşlıq etmək üçün bizimlə əlaqə saxlayın.</p>
+            
+            <div class="contact-info">
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <a href="tel:+994773059585" target="_blank">+994 77 305 95 85</a>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-phone"></i>
+                    <a href="tel:+994702754499" target="_blank">+994 70 275 44 99</a>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-envelope"></i>
+                    <a href="mailto:as.avto.2025@gmail.com" target="_blank">as.avto.2025@gmail.com</a>
+                </div>
+                <div class="contact-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <a href="https://maps.app.goo.gl/p7d9CoJQcSvPBMUH9" target="_blank">Bakı şəh. Binəqədi ray. M.Rəsulzadə</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="login-container">
+            <div class="login-logo">
+                <img src="{% static 'images/Header_Logo.png' %}" alt="AS-AVTO">
+            </div>
+            <h1 class="login-title">Qeydiyyat</h1>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="{% if message.tags == 'error' %}error-message{% else %}success-message{% endif %}">
+                        <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <i class="fas fa-user"></i>
+                    <input type="text" name="username" class="form-input" placeholder="İstifadəçi adı" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Şifrə" required>
+                    <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" name="phone" class="form-input" placeholder="Telefon nömrəsi (+994)" required>
+                </div>
+                <div class="form-group">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <input type="text" name="address" class="form-input" placeholder="Ünvan" required>
+                </div>
+                <button type="submit" class="login-button">
+                    <i class="fas fa-user-plus"></i>
+                    Qeydiyyatdan keç
+                </button>
+            </form>
+
+            <div class="register-link">
+                Artıq hesabınız var? <a href="{% url 'login' %}">Daxil olun</a>
+            </div>
+
+            <div class="login-footer">
+                © {% now "Y" %} AS-AVTO. Bütün hüquqlar qorunur.
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.querySelector('.toggle-password');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.classList.remove('fa-eye');
+            toggleIcon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.classList.remove('fa-eye-slash');
+            toggleIcon.classList.add('fa-eye');
+        }
+    }
+    </script>
+</body>
+</html> 

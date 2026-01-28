@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Sifarişlərim - AS-AVTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Sifarişlərim</h2>
+
+    {% if orders %}
+        <div class="table-container">
+            <div class="table-header">
+                <div class="header-summary">
+                    <div class="summary-item">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="summary-label">Ümumi Sifarişlər:</span>
+                        <span class="summary-value">{{ statistics.umumi_sifaris_sayi }}</span>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <span class="summary-label">Ümumi Məbləğ:</span>
+                        <span class="summary-value">{{ statistics.umumi_mebleg }} ₼</span>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="summary-label">Ödənilən:</span>
+                        <span class="summary-value">{{ statistics.umumi_odenilen }} ₼</span>
+                    </div>
+                    <div class="summary-item">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span class="summary-label">Qalıq Borc:</span>
+                        <span class="summary-value">{{ statistics.umumi_borc }} ₼</span>
+                    </div>
+                </div>
+            </div>
+            <table class="table orders-table">
+                <thead>
+                    <tr>
+                        <th>Sifariş №</th>
+                        <th>Tarix</th>
+                        <th>Status</th>
+                        <th>Çatdırılma</th>
+                        <th>Ümumi Məbləğ</th>
+                        <th>Ödənilən</th>
+                        <th>Qalıq Borc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'order_detail' order.id %}" class="order-link">
+                                #{{ order.id }}
+                            </a>
+                        </td>
+                        <td>{{ order.tarix|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            <span class="status-badge status-{{ order.status|lower }}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="delivery-badge">
+                                {{ order.get_catdirilma_usulu_display }}
+                            </span>
+                        </td>
+                        <td>{{ order.umumi_mebleg }} ₼</td>
+                        <td>{{ order.odenilen_mebleg }} ₼</td>
+                        <td>{{ order.qaliq_borc }} ₼</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-orders">
+            <i class="fas fa-clipboard-list"></i>
+            <p>Hələ heç bir sifariş verməmisiniz.</p>
+            <a href="{% url 'products' %}" class="btn btn-primary">Məhsullara bax</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,621 @@
+{% extends "admin/change_list.html" %}
+{% load i18n %}
+{% load static %}
+{% load admin_urls static admin_list %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/admin.css' %}">
+    <script type="text/javascript" src="{% static 'js/admin.js' %}"></script>
+{% endblock %}
+
+{% block object-tools %}
+    <div class="object-tools-items">
+        <a href="{% url 'admin:export_pdf' %}" class="pdf-export-btn">
+            <i class="fas fa-file-pdf"></i>
+            PDF-ə Çıxart
+        </a>
+    </div>
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <!-- Excel Import Modal -->
+    <div id="excelImportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Excel Faylından İdxal</h3>
+                <span class="close">&times;</span>
+            </div>
+
+            <!-- Excel Nümunəsi -->
+            <div class="excel-sample">
+                <h4>Excel Faylı Nümunəsi:</h4>
+                <div class="table-responsive">
+                    <table class="sample-table">
+                        <thead>
+                            <tr>
+                                <th>adi</th>
+                                <th>kateqoriya</th>
+                                <th>firma</th>
+                                <th>avtomobil</th>
+                                <th>brend_kod</th>
+                                <th>kodlar</th>
+                                <th>olcu</th>
+                                <th>vitrin</th>
+                                <th>maya_qiymet</th>
+                                <th>qiymet</th>
+                                <th>stok</th>
+                                <th>melumat</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Yağ filteri</td>
+                                <td>Filterlər</td>
+                                <td>BOSCH</td>
+                                <td>Mercedes</td>
+                                <td>F026407123/A6421800009</td>
+                                <td>F026407123 A6421800009</td>
+                                <td>90x120x15</td>
+                                <td>A5-B2</td>
+                                <td>15.50</td>
+                                <td>25.00</td>
+                                <td>10</td>
+                                <td>2.0-3.0 CDI mühərriklər üçün</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="notes">
+                    <p><strong>Qeydlər:</strong></p>
+                    <ul>
+                        <li>Bütün başlıqlar kiçik hərflərlə yazılmalıdır</li>
+                        <li>brend_kod və ya kodlar sütunundan ən azı biri dolu olmalıdır</li>
+                        <li>kodlar sütununda birinci kod brend_kod, ikinci kod oem kimi qəbul edilir (Əgər boşdursa)</li>
+                        <li>Qiymətlər nöqtə (. ,) ilə yazılmalıdır (məs: 15.50) və ya (məs: 15,50)</li>
+                        <li>Stok tam ədəd olmalıdır</li>
+                    </ul>
+                </div>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" action="import-excel/">
+                {% csrf_token %}
+                <div class="file-input-container">
+                    <input type="file" name="excel_file" accept=".xlsx" required>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div id="importProgress" style="display: none; margin: 20px 0;">
+                    <div style="background-color: #f0f0f0; border-radius: 10px; overflow: hidden;">
+                        <div id="progressBar" style="background-color: #4CAF50; height: 20px; width: 0%; transition: width 0.3s;"></div>
+                    </div>
+                    <div id="progressText" style="text-align: center; margin-top: 5px;">0%</div>
+                    <div id="statusText" style="text-align: center; margin-top: 5px; font-size: 12px;"></div>
+                    
+                    <!-- Error Summary -->
+                    <div id="errorSummary" style="display: none; margin-top: 15px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px;">
+                        <h5 style="margin: 0 0 10px 0; color: #856404;">Xəta Xülasəsi:</h5>
+                        <div id="errorList"></div>
+                    </div>
+                </div>
+                
+                <div class="button-container">
+                    <button type="button" class="closeBtn">Bağla</button>
+                    <button type="submit" class="submit-btn" id="importBtn">İdxal Et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Error Details Modal -->
+    <div id="errorDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Xəta Detalları</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="errorDetailsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for image change -->
+    <input type="file" id="imageFileInput" accept="image/*" style="display: none;">
+
+    <!-- Excel Import Button -->
+    <div class="import-button-container">
+        <button id="showExcelImportModal" class="import-btn">
+            <i class="fas fa-file-excel"></i> Excel İdxal Et
+        </button>
+    </div>
+
+    <!-- Statistics Section -->
+    <div style="margin: 40px auto; padding: 20px; background-color: #fff; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border: 1px solid #ddd; max-width: 1000px;">
+        <div style="display: flex; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+            <div style="text-align: center; padding: 15px; min-width: 250px; background-color: #f8f9fa; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight: bold; color: #666; margin-bottom: 8px;">Toplam Maya Dəyəri</div>
+                <div style="font-size: 1.3em; color: #2B5173;">{{ total_stats.toplam_maya|default:0|floatformat:2 }} ₼</div>
+            </div>
+            <div style="text-align: center; padding: 15px; min-width: 250px; background-color: #f8f9fa; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight: bold; color: #666; margin-bottom: 8px;">Toplam Satış Dəyəri</div>
+                <div style="font-size: 1.3em; color: #2B5173;">{{ total_stats.toplam_satis|default:0|floatformat:2 }} ₼</div>
+            </div>
+            <div style="text-align: center; padding: 15px; min-width: 250px; background-color: #f8f9fa; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="font-weight: bold; color: #666; margin-bottom: 8px;">Gözlənilən Xeyir</div>
+                <div style="font-size: 1.3em; color: {% if total_stats.toplam_xeyir > 0 %}#28a745{% else %}#dc3545{% endif %}">
+                    {{ total_stats.toplam_xeyir|default:0|floatformat:2 }} ₼
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ block.super }}
+
+    <style>
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 2% auto;
+            padding: 0;
+            border: none;
+            width: 90%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background-color: #2B5173;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close {
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            opacity: 0.7;
+        }
+
+        .excel-sample {
+            padding: 20px;
+            background-color: #f8f9fa;
+            margin: 20px;
+            border-radius: 4px;
+        }
+
+        .sample-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .sample-table th, .sample-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .sample-table th {
+            background-color: #2B5173;
+            color: white;
+        }
+
+        .notes {
+            margin-top: 15px;
+        }
+
+        .notes ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+
+        .file-input-container {
+            padding: 20px;
+        }
+
+        .button-container {
+            padding: 20px;
+            text-align: right;
+            border-top: 1px solid #ddd;
+        }
+
+        .submit-btn, .closeBtn {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .closeBtn {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .import-btn {
+            background-color: #2B5173;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .change-image-btn {
+            background-color: #007cba;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .change-image-btn:hover {
+            background-color: #005a87;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .change-image-btn:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('excelImportModal');
+            const showBtn = document.getElementById('showExcelImportModal');
+            const closeBtns = document.querySelectorAll('.close, .closeBtn');
+            const form = document.querySelector('#excelImportModal form');
+            const importBtn = document.getElementById('importBtn');
+            const progressDiv = document.getElementById('importProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const statusText = document.getElementById('statusText');
+            const errorSummary = document.getElementById('errorSummary');
+            const errorList = document.getElementById('errorList');
+            const errorDetailsModal = document.getElementById('errorDetailsModal');
+            const errorDetailsContent = document.getElementById('errorDetailsContent');
+
+            // Show modal
+            showBtn.onclick = function() {
+                modal.style.display = 'block';
+            }
+
+            // Close modal
+            closeBtns.forEach(btn => {
+                btn.onclick = function() {
+                    modal.style.display = 'none';
+                    resetProgress();
+                }
+            });
+
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                    resetProgress();
+                }
+                if (event.target == errorDetailsModal) {
+                    errorDetailsModal.style.display = 'none';
+                }
+            }
+
+            // Handle form submission
+            form.onsubmit = function(e) {
+                e.preventDefault();
+                performBatchImport();
+            }
+
+            function resetProgress() {
+                progressDiv.style.display = 'none';
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                statusText.textContent = '';
+                errorSummary.style.display = 'none';
+                errorList.innerHTML = '';
+                importBtn.disabled = false;
+                importBtn.textContent = 'İdxal Et';
+            }
+
+            function updateProgress(processed, total, newCount, updateCount, errorCount) {
+                const percentage = Math.round((processed / total) * 100);
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = percentage + '%';
+                statusText.textContent = `${processed}/${total} sətir emal edildi. Yeni: ${newCount}, Yeniləndi: ${updateCount}, Xəta: ${errorCount}`;
+            }
+
+            async function performBatchImport() {
+                const fileInput = form.querySelector('input[type="file"]');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                return;
+            }
+
+                importBtn.disabled = true;
+                importBtn.textContent = 'İdxal edilir...';
+                progressDiv.style.display = 'block';
+                statusText.textContent = 'Excel faylı oxunur...';
+                errorSummary.style.display = 'none';
+                errorList.innerHTML = '';
+
+                try {
+                    // Step 1: Initialize import
+            const formData = new FormData();
+            formData.append('excel_file', file);
+                    formData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+                    const initResponse = await fetch('import-excel-init/', {
+                method: 'POST',
+                body: formData
+                    });
+
+                    const initResult = await initResponse.json();
+                    
+                    if (initResult.status !== 'ok') {
+                        throw new Error(initResult.message);
+                    }
+
+                    const jobId = initResult.job_id;
+                    const totalRows = initResult.total_rows;
+
+                    // Step 2: Process in batches
+                    const batchSize = 50;
+                    let processed = 0;
+                    let newCount = 0;
+                    let updateCount = 0;
+                    let errorCount = 0;
+                    let allErrors = [];
+
+                    while (processed < totalRows) {
+                        const batchFormData = new FormData();
+                        batchFormData.append('job_id', jobId);
+                        batchFormData.append('start', processed);
+                        batchFormData.append('size', batchSize);
+                        batchFormData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+                        const batchResponse = await fetch('import-excel-batch/', {
+                            method: 'POST',
+                            body: batchFormData
+                        });
+
+                        const batchResult = await batchResponse.json();
+                        
+                        if (batchResult.status !== 'ok') {
+                            throw new Error(batchResult.message);
+                        }
+
+                        processed = batchResult.processed_rows;
+                        newCount = batchResult.new_count;
+                        updateCount = batchResult.update_count;
+                        errorCount = batchResult.error_count;
+
+                        // Collect errors from batch
+                        if (batchResult.errors && batchResult.errors.length > 0) {
+                            allErrors = allErrors.concat(batchResult.errors);
+                        }
+
+                        updateProgress(processed, totalRows, newCount, updateCount, errorCount);
+                        
+                        // Small delay to allow UI to update
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+
+                    // Step 3: Finalize (delete products not in Excel)
+                    statusText.textContent = 'Excel-də olmayan məhsullar silinir...';
+                    
+                    const finalizeFormData = new FormData();
+                    finalizeFormData.append('job_id', jobId);
+                    finalizeFormData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+                    const finalizeResponse = await fetch('import-excel-finalize/', {
+                        method: 'POST',
+                        body: finalizeFormData
+                    });
+
+                    const finalizeResult = await finalizeResponse.json();
+                    
+                    if (finalizeResult.status !== 'ok') {
+                        throw new Error(finalizeResult.message);
+                    }
+
+                    const deletedCount = finalizeResult.deleted_count;
+                    
+                    // Show final results
+                    progressBar.style.width = '100%';
+                    progressText.textContent = '100%';
+                    statusText.textContent = `Tamamlandı! Yeni: ${newCount}, Yeniləndi: ${updateCount}, Silindi: ${deletedCount}, Xəta: ${errorCount}`;
+                    
+                    // Show error summary if there are errors
+                    if (allErrors.length > 0) {
+                        showErrorSummary(allErrors);
+                    }
+
+                } catch (error) {
+                    console.error('Import error:', error);
+                    statusText.textContent = 'Xəta: ' + error.message;
+                    resetProgress();
+                }
+            }
+
+            function showErrorSummary(errors) {
+                errorSummary.style.display = 'block';
+                
+                // Group errors by line number
+                const errorsByLine = {};
+                errors.forEach(error => {
+                    const line = error.line || 'Bilinməyən';
+                    if (!errorsByLine[line]) {
+                        errorsByLine[line] = [];
+                    }
+                    errorsByLine[line].push(error);
+                });
+
+                // Create error list with clickable items
+                const errorListHTML = Object.keys(errorsByLine).map(line => {
+                    const lineErrors = errorsByLine[line];
+                    const errorCount = lineErrors.length;
+                    return `
+                        <div class="error-line-item" data-line="${line}" style="cursor: pointer; padding: 5px; margin: 2px 0; background-color: #fff; border: 1px solid #ddd; border-radius: 3px;">
+                            <strong>Sətir ${line}:</strong> ${errorCount} xəta
+                            <span style="float: right; color: #007bff;">Detallar →</span>
+                        </div>
+                    `;
+                }).join('');
+                
+                errorList.innerHTML = errorListHTML;
+
+                // Add click handlers to error items
+                document.querySelectorAll('.error-line-item').forEach(item => {
+                    item.onclick = function() {
+                        const line = this.getAttribute('data-line');
+                        const lineErrors = errorsByLine[line];
+                        showErrorDetails(line, lineErrors);
+                    };
+                });
+            }
+
+            function showErrorDetails(line, errors) {
+                errorDetailsModal.style.display = 'block';
+                
+                const errorDetailsHTML = `
+                    <h4>Sətir ${line} - Xəta Detalları:</h4>
+                    ${errors.map(error => `
+                        <div style="margin-bottom: 15px; padding: 10px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+                            <strong>Xəta:</strong> ${error.message || 'Bilinməyən xəta'}<br>
+                            ${error.field ? `<strong>Sahə:</strong> ${error.field}<br>` : ''}
+                            ${error.row ? `<strong>Sətir məlumatları:</strong><br>
+                                <div style="margin-top: 5px; font-family: monospace; font-size: 12px; background-color: #fff; padding: 5px; border-radius: 3px;">
+                                    ${Object.entries(error.row).map(([key, value]) => `${key}: ${value}`).join('<br>')}
+                                </div>` : ''}
+                        </div>
+                    `).join('')}
+                `;
+                
+                errorDetailsContent.innerHTML = errorDetailsHTML;
+            }
+
+            // Close error details modal
+            document.querySelector('#errorDetailsModal .close').onclick = function() {
+                errorDetailsModal.style.display = 'none';
+            }
+        });
+
+        // Image Change Functionality
+        function changeProductImage(productId) {
+            const fileInput = document.getElementById('imageFileInput');
+            fileInput.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validate image file
+                    if (!file.type.startsWith('image/')) {
+                        alert('Yalnız şəkil faylları qəbul edilir.');
+                        return;
+                    }
+                    
+                    // Create FormData and send request
+                    const formData = new FormData();
+                    formData.append('product_id', productId);
+                    formData.append('image', file);
+                    formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
+                    
+                    // Show loading state on button
+                    const button = document.querySelector(`button[data-product-id="${productId}"]`);
+                    const originalText = button.textContent;
+                    button.textContent = 'Yenilənir...';
+                    button.disabled = true;
+                    
+                    fetch('change-image/', {
+                method: 'POST',
+                        body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                        if (data.status === 'success') {
+                            // Update the image in the admin list using the specific ID
+                            const imageCell = document.getElementById(`product-image-${productId}`);
+                            if (imageCell) {
+                                imageCell.src = data.new_image_url;
+                                imageCell.style.width = '50px';
+                                imageCell.style.height = '50px';
+                                imageCell.style.objectFit = 'cover';
+                                imageCell.style.borderRadius = '4px';
+                            }
+                            
+                            // Update button text
+                            button.textContent = 'Şəkil Dəyişildi!';
+                            setTimeout(() => {
+                                button.textContent = originalText;
+                                button.disabled = false;
+                            }, 2000);
+                } else {
+                    alert('Xəta: ' + data.message);
+                            button.textContent = originalText;
+                            button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                        alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    });
+                }
+                
+                // Reset file input
+                fileInput.value = '';
+            };
+            
+            // Trigger file selection
+            fileInput.click();
+        }
+
+        // Add click event listeners to change image buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('change-image-btn')) {
+                const productId = e.target.getAttribute('data-product-id');
+                changeProductImage(productId);
+            }
+        });
+    </script>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %} 

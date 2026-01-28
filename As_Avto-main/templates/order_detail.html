@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Sifariş #{{ order.id }} - AS-AVTO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="order-header">
+        <h2>Sifariş #{{ order.id }}</h2>
+        <a href="{% url 'orders' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Sifarişlərə qayıt
+        </a>
+    </div>
+
+    <div class="table-container">
+        <div class="table-header">
+            <div class="header-summary">
+                <div class="summary-item">
+                    <i class="fas fa-calendar"></i>
+                    <span class="summary-label">Sifariş tarixi:</span>
+                    <span class="summary-value">{{ order.tarix|date:"d.m.Y H:i" }}</span>
+            </div>
+                <div class="summary-item">
+                    <i class="fas fa-info-circle"></i>
+                    <span class="summary-label">Status:</span>
+                <span class="status-badge status-{{ order.status|lower }}">
+                    {{ order.get_status_display }}
+                </span>
+            </div>
+                <div class="summary-item">
+                    <i class="fas fa-truck"></i>
+                    <span class="summary-label">Çatdırılma:</span>
+                    <span class="delivery-badge">
+                        {{ order.get_catdirilma_usulu_display }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <i class="fas fa-money-bill-wave"></i>
+                    <span class="summary-label">Ümumi məbləğ:</span>
+                    <span class="summary-value">{{ order.umumi_mebleg }} ₼</span>
+                </div>
+                <div class="summary-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span class="summary-label">Ödənilən:</span>
+                    <span class="summary-value">{{ order.odenilen_mebleg }} ₼</span>
+            </div>
+                <div class="summary-item">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span class="summary-label">Qalıq borc:</span>
+                    <span class="summary-value">{{ order.qaliq_borc }} ₼</span>
+            </div>
+        </div>
+    </div>
+
+        <div class="order-items">
+    <h3>Sifariş edilən məhsullar</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Şəkil</th>
+                <th>Kodu</th>
+                <th>Firma Adı</th>
+                <th>Məhsul Adı</th>
+                <!-- <th>OEM</th> -->
+                <th>Miqdar</th>
+                <th>Qiymət</th>
+                <th>Cəmi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order.sifarisitem_set.all %}
+            <tr>
+                <td>
+                    <img src="{{ item.mehsul.sekil.url }}" alt="{{ item.mehsul.adi }}" class="product-image" onclick="openImageModal('{{ item.mehsul.sekil.url }}')">
+                </td>
+                <td>{{ item.mehsul.brend_kod }}</td>
+                <td>{{ item.mehsul.firma.adi }}</td>
+                <td>{{ item.mehsul.adi }}</td>
+                <!-- <td>{{ item.mehsul.oem }}</td> -->
+                <td>{{ item.miqdar }}</td>
+                        <td>{{ item.qiymet }} ₼</td>
+                        <td>{{ item.umumi_mebleg }} ₼</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+        </div>
+    </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal">
+    <span class="image-modal-close">&times;</span>
+    <div class="modal-image-content">
+        <img id="modalImage" class="modal-image" src="" alt="Modal Image">
+    </div>
+</div>
+
+{% endblock %} 

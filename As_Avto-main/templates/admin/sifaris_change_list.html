@@ -1,0 +1,110 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_list static %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/admin.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <script src="{% static 'js/admin.js' %}"></script>
+
+   
+{% endblock %}
+
+{% block content_title %}
+    <div class="header-container">
+        <h1>Sifarişlər</h1>
+        <button class="show-stats-btn" onclick="toggleStatistics()">
+            <i class="fas fa-chart-bar"></i> İstifadəçi Statistikasına Bax
+        </button>
+    </div>
+{% endblock %}
+
+{% block result_list %}
+    <div id="statisticsContainer" class="statistics-container">
+        <!-- İstifadəçi Axtarışı -->
+        <div class="search-container">
+            <div class="search-wrapper">
+                <input type="text" 
+                       id="userSearch" 
+                       class="search-input" 
+                       onkeyup="filterUsers()" 
+                       placeholder="İstifadəçi adına görə axtar..."
+                       autocomplete="off">
+                <button type="button" 
+                        class="clear-search" 
+                        onclick="clearSearch()" 
+                        title="Təmizlə">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="no-results">
+                <i class="fas fa-search"></i> Axtarışınıza uyğun nəticə tapılmadı
+            </div>
+        </div>
+
+        <!-- Ümumi Statistika -->
+        <div class="module">
+            <div class="stats-header">
+                <h2>Ümumi Statistika</h2>
+            </div>
+            <div class="stats-content">
+                <div class="stats-grid">
+                    <div class="stats-item orders">
+                        <strong>Ümumi Sifarişlər</strong>
+                        <span>{{ total_statistics.total_orders }}</span>
+                    </div>
+                    <div class="stats-item total">
+                        <strong>Ümumi Məbləğ</strong>
+                        <span>{{ total_statistics.total_amount|floatformat:2 }} ₼</span>
+                    </div>
+                    <div class="stats-item paid">
+                        <strong>Ümumi Ödənilən</strong>
+                        <span>{{ total_statistics.total_paid|floatformat:2 }} ₼</span>
+                    </div>
+                    <div class="stats-item debt">
+                        <strong>Ümumi Borc</strong>
+                        <span>{{ total_statistics.total_debt|floatformat:2 }} ₼</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- İstifadəçi Statistikaları -->
+        <div class="module">
+            <div class="stats-header">
+                <h2>İstifadəçi Statistikaları</h2>
+            </div>
+            <div class="stats-content">
+                <table class="stats-table">
+                    <thead>
+                        <tr>
+                            <th>İstifadəçi</th>
+                            <th>Sifariş Sayı</th>
+                            <th>Ümumi Məbləğ</th>
+                            <th>Ödənilən</th>
+                            <th>Qalıq Borc</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for stat in user_statistics %}
+                        <tr>
+                            <td>{{ stat.username }}</td>
+                            <td>{{ stat.sifaris_sayi }}</td>
+                            <td class="amount">{{ stat.umumi_mebleg|default:0|floatformat:2 }} ₼</td>
+                            <td class="paid">{{ stat.umumi_odenilen|default:0|floatformat:2 }} ₼</td>
+                            <td class="debt">{{ stat.umumi_borc|default:0|floatformat:2 }} ₼</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Standart Sifariş Siyahısı -->
+    {{ block.super }}
+{% endblock %} 

@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AS-AVTO{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="icon" type="image/png" href="{% static 'images/favicon.png' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <a href="{% url 'base' %}">
+                            <img src="{% static 'images/Header_Logo.png' %}" alt="AS-AVTO" class="logo-img">
+                        </a>
+                    </div>
+                    <div class="header-right">
+                        <nav class="main-nav">
+                            <ul>
+                                <!-- <li><a href="{% url 'base' %}" class="nav-link {% if request.resolver_match.url_name == 'base' %}active{% endif %}"><i class="fas fa-home"></i> Ana Səhifə</a></li> -->
+                                <li><a href="#" class="nav-link blink-news" id="yeniliklerLink"><i class="fas fa-bullhorn"></i> Yeniliklər</a></li>
+                                <li><a href="{% url 'products' %}" class="nav-link {% if request.resolver_match.url_name == 'products' %}active{% endif %}"><i class="fas fa-box"></i> Məhsullar</a></li>
+                                <li><a href="{% url 'new_products' %}" class="nav-link {% if request.resolver_match.url_name == 'new_products' %}active{% endif %}"><i class="fas fa-star"></i> Yeni Məhsullar</a></li>
+                                <li><a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Sifarişlərim</a></li>
+                                <li>
+                                    <a href="tel:+994702754499" class="nav-link">
+                                        <i class="fas fa-phone"></i> +994 70 275 44 99
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#" class="nav-link {% if request.resolver_match.url_name == 'cart' %}active{% endif %}" id="cartSidebarToggle">
+                                        <span class="cart-icon">
+                                            <i class="fas fa-shopping-cart"></i>
+                                            <span class="cart-counter">{{ request.session.cart|length }}</span>
+                                        </span>
+                                        Səbət
+                                    </a>
+                                </li>
+                                <li class="user-menu">
+                                    <div class="user-dropdown">
+                                        <button class="user-button">
+                                            <i class="fas fa-user"></i>
+                                            <i class="fas fa-chevron-down"></i>
+                                        </button>
+                                        <div class="user-dropdown-content">
+                                            <span class="user-name">
+                                                <i class="fa-regular fa-circle-user"></i>
+                                                {{ request.user.username }}
+                                            </span>
+                                            <a href="{% url 'logout' %}" class="logout-link">
+                                                <i class="fas fa-sign-out-alt"></i> Çıxış et
+                                            </a>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <div class="container">
+                <form method="get" action="{% url 'products' %}" class="search-form">
+                    <div class="search-grid">
+                        <div class="search-item">
+                            <!-- <label for="category">Kateqoriya</label> -->
+                            <select id="category" name="kateqoriya">
+                                <option value="">Bütün Kateqoriyalar</option>
+                                {% for category in request.categories %}
+                                <option value="{{ category.adi }}" {% if request.GET.kateqoriya == category.adi %}selected{% endif %}>{{ category.adi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <!-- <label for="brand">Marka</label> -->
+                            <select id="brand" name="firma">
+                                <option value="">Bütün Firmalar</option>
+                                {% for brand in request.brands %}
+                                <option value="{{ brand.adi }}" {% if request.GET.firma == brand.adi %}selected{% endif %}>{{ brand.adi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <!-- <label for="model">Model</label> -->
+                            <select id="model" name="avtomobil">
+                                <option value="">Bütün Avtomobillər</option>
+                                {% for model in request.models %}
+                                <option value="{{ model.adi }}" {% if request.GET.avtomobil == model.adi %}selected{% endif %}>{{ model.adi }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <!-- <label for="query">Məhsul Adı</label> -->
+                            <div class="search-container">
+                                <input type="text" id="query" name="search" placeholder="Kodu daxil edin..." value="{{ request.GET.search }}" autocomplete="off">
+                                <div id="search-results" class="search-results"></div>
+                            </div>
+                        </div>
+                        <div class="search-item search-button">
+                            <button type="submit" class="search-icon-button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            <span class="total-debt">
+                                <i class="fas fa-money-bill-wave"></i>
+                                Borc: {{ request.statistics.umumi_borc }} ₼
+                            </span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if request.header_messages %}
+        <div class="header-message">
+            <div class="header-message-content">
+                {% for message in request.header_messages %}
+                    <p class="message-slide" {% if not forloop.first %}style="display: none;"{% endif %}>{{ message.mesaj }}</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- New Products Carousel - Only show on home page -->
+        {% if request.resolver_match.url_name == 'base' and new_products %}
+        <div class="new-products-section">
+            <div class="container">
+                <div class="swiper new-products-swiper">
+                    <div class="swiper-wrapper">
+                        {% for product in new_products %}
+                        <div class="swiper-slide">
+                            <div class="product-card">
+                                <div class="ribbon-wrapper">
+                                    <div class="ribbon">Yeni</div>
+                                </div>
+                                <div class="product-image">
+                                    {% if product.sekil and product.sekil.url != 'mehsul_sekilleri/no_image.webp' %}
+                                    <img src="{{ product.sekil.url }}" alt="{{ product.adi }}" onclick="openImageModal('{{ product.sekil.url }}')" class="clickable-image" onerror="this.src='{% static 'images/no_image.webp' %}'">
+                                    {% else %}
+                                    <img src="{% static 'images/no_image.webp' %}" alt="No Image">
+                                    {% endif %}
+                                </div>
+                                <div class="product-info">
+                                    <h3 class="product-title">{{ product.adi }}</h3>
+                                    <p class="product-code">{{ product.brend_kod }}</p>
+                                    <p class="product-price">{{ product.qiymet }} ₼</p>
+                                    <a href="{% url 'products' %}?search={{ product.brend_kod }}" class="view-product">
+                                        Məhsula bax <i class="fas fa-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <!-- <div class="swiper-pagination"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div> -->
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                    <div class="message message-{{ message.tags }}">
+                        <i class="fas fa-info-circle"></i>
+                        {{ message }}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+
+        <!-- Logo Slider -->
+        <div class="logo-slider-section">
+            <div class="container">
+                <div class="swiper logo-swiper">
+                    <div class="swiper-wrapper">
+                        {% for firma in request.brands %}
+                            {% if firma.logo %}
+                            <div class="swiper-slide">
+                                <div class="logo-slide">
+                                    <img src="{{ firma.logo.url }}" alt="{{ firma.adi }}" class="firma-logo">
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+   
+    {% block extra_js %}{% endblock %}
+
+    <!-- Popup Modal -->
+    {% if popup_images %}
+    <div id="popupModal" class="popup-modal">
+        <div class="popup-content">
+            <span class="popup-close">X</span>
+            <div class="swiper popup-swiper">
+                <div class="swiper-wrapper">
+                    {% for image in popup_images %}
+                    <div class="swiper-slide">
+                        {% if image.link %}
+                        <a href="{{ image.link }}" target="_blank">
+                        {% endif %}
+                            <img src="{{ image.sekil.url }}" alt="{{ image.basliq|default:'Popup Image' }}">
+                            {% if image.basliq %}
+                            <div class="popup-title">{{ image.basliq }}</div>
+                            {% endif %}
+                        {% if image.link %}
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="swiper-pagination"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-button-next"></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="image-modal-close">&times;</span>
+        <div class="modal-image-content">
+            <img id="modalImage" class="modal-image" src="" alt="Modal Image">
+        </div>
+    </div>
+
+    <!-- Cart Sidebar -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <div class="cart-sidebar-header">
+            <div class="cart-sidebar-title">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Səbətim</span>
+            </div>
+            <button id="closeSidebar" class="close-sidebar"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="cart-sidebar-content">
+            <!-- Cart content will be loaded here -->
+        </div>
+    </div>
+    <!-- Cart Sidebar Overlay -->
+    <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+    <!-- WhatsApp Chat Bot -->
+    <a href="https://wa.me/+994773059585" target="_blank" class="whatsapp-chat">
+        <i class="fab fa-whatsapp"></i>
+    </a>
+</body>
+</html>
