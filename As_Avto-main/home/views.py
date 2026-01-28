@@ -643,7 +643,8 @@ def get_search_filtered_products(queryset, search_query):
                 melumat_word_filter = reduce(or_, [Q(melumat__icontains=variation) for variation in word_variations])
                 avtomobil_filter = reduce(or_, [Q(avtomobil__adi__icontains=variation) for variation in word_variations])
                 firma_filter = reduce(or_, [Q(firma__adi__icontains=variation) for variation in word_variations])
-                ad_filters.append(word_filter | melumat_word_filter | avtomobil_filter | firma_filter)
+                olcu_filter = reduce(or_, [Q(olcu__icontains=variation) for variation in word_variations])
+                ad_filters.append(word_filter | melumat_word_filter | avtomobil_filter | firma_filter | olcu_filter)
             ad_filter = reduce(and_, ad_filters)
             searchtext_and_filter = reduce(
                 and_,
