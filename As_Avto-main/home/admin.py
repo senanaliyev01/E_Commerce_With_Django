@@ -49,6 +49,16 @@ class MehsulAdmin(admin.ModelAdmin):
     change_list_template = 'admin/mehsul_change_list.html'
     actions = ['mark_as_new', 'remove_from_new']
 
+    def get_search_results(self, request, queryset, search_term):
+        """Views.py-dəki xüsusi axtarış funksiyasını admin panelində istifadə et"""
+        from .views import get_search_filtered_products
+        
+        if search_term:
+            queryset = get_search_filtered_products(queryset, search_term)
+        
+        use_distinct = False
+        return queryset, use_distinct
+
     def sekil_preview(self, obj):
         if obj.sekil:
             return format_html('<img src="{}" id="product-image-{}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;"/>', obj.sekil.url, obj.id)
