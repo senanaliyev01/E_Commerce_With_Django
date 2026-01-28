@@ -234,11 +234,6 @@ SIMPLEUI_CONFIG = {
                     'icon': 'fas fa-receipt',
                     'url': 'home/sifaris/'
                 },
-                {
-                    'name': 'Sifariş elementləri',
-                    'icon': 'fas fa-clipboard-list',
-                    'url': 'home/sifarisitem/'
-                },
             ]
         },
         {

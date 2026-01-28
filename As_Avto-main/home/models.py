@@ -196,6 +196,11 @@ class SifarisItem(models.Model):
         super().save(*args, **kwargs)
         self.sifaris.update_total()
 
+    def delete(self, *args, **kwargs):
+        sifaris = self.sifaris
+        super().delete(*args, **kwargs)
+        sifaris.update_total()
+
     @property
     def umumi_mebleg(self):
         return self.qiymet * self.miqdar
