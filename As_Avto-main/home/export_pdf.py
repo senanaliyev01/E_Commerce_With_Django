@@ -31,31 +31,64 @@ def generate_products_pdf():
     elements.append(title)
     elements.append(Spacer(1, 20))
 
-    # Cədvəl başlıqları
-    headers = ['№', 'Kod', 'Firma', 'Məhsul', 'Vitrin', 'Stok',  'Qiymət']
+    # Başlıq stilləri - Sifaris kimi
+    headerStyle = ParagraphStyle(
+        'HeaderStyle',
+        parent=styles['Normal'],
+        fontName='NotoSans',
+        fontSize=9,
+        textColor=colors.whitesmoke,
+        alignment=1,  # Mərkəz
+        spaceAfter=0,
+        spaceBefore=0,
+        leading=10
+    )
+
+    # Məhsul məlumatları üçün stil - Sifaris kimi
+    contentStyle = ParagraphStyle(
+        'ContentStyle',
+        parent=styles['Normal'],
+        fontName='NotoSans',
+        fontSize=8,
+        alignment=1,  # Mərkəz
+        spaceAfter=0,
+        spaceBefore=0,
+        leading=10
+    )
+
+    # Cədvəl başlıqları - Paragraph ilə
+    headers = [
+        Paragraph('№', headerStyle),
+        Paragraph('Kod', headerStyle),
+        Paragraph('Firma', headerStyle),
+        Paragraph('Məhsul', headerStyle),
+        Paragraph('Vitrin', headerStyle),
+        Paragraph('Stok', headerStyle),
+        Paragraph('Qiymət', headerStyle)
+    ]
     
     # Məhsul məlumatları
     data = [headers]
     for index, mehsul in enumerate(Mehsul.objects.all(), 1):
         row = [
-            str(index),
-            mehsul.brend_kod,
-            mehsul.firma.adi if mehsul.firma else '-',
-            mehsul.adi,
-            str(mehsul.vitrin.nomre) if mehsul.vitrin else '-',
-            str(mehsul.stok),
-            f"{mehsul.qiymet} ₼"
+            Paragraph(str(index), contentStyle),
+            Paragraph(mehsul.brend_kod, contentStyle),
+            Paragraph(mehsul.firma.adi if mehsul.firma else '-', contentStyle),
+            Paragraph(mehsul.adi, contentStyle),  # Uzun adlar alta düşəcək
+            Paragraph(str(mehsul.vitrin.nomre) if mehsul.vitrin else '-', contentStyle),
+            Paragraph(str(mehsul.stok), contentStyle),
+            Paragraph(f"{mehsul.qiymet} ₼", contentStyle)
         ]
         data.append(row)
 
-    # Cədvəl yaratmaq
+    # Cədvəl yaratmaq - Sifaris kimi
     table = Table(data)
     table.setStyle(TableStyle([
         # Başlıq sətri
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('FONTNAME', (0, 0), (-1, 0), 'NotoSans'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('TOPPADDING', (0, 0), (-1, 0), 5),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
         
@@ -63,7 +96,7 @@ def generate_products_pdf():
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTNAME', (0, 1), (-1, -1), 'NotoSans'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
+        ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('TOPPADDING', (0, 1), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
         
@@ -71,7 +104,7 @@ def generate_products_pdf():
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#2B5173')),
         
-        # Sütun enləri
+        # Sütun enləri - Sifaris kimi
         ('COLWIDTHS', (0, 0), (-1, -1), '*'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),

@@ -11,10 +11,9 @@
 
 {% block object-tools %}
     <div class="object-tools-items">
-        <a href="{% url 'admin:export_pdf' %}" class="pdf-export-btn">
-            <i class="fas fa-file-pdf"></i>
-            PDF-ə Çıxart
-        </a>
+        <button id="downloadProductsPdfBtn" class="pdf-download-btn" style="background-color: #417690; color: white; padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer;">
+            <i class="fas fa-file-pdf"></i> PDF-ə Çıxart
+        </button>
     </div>
     {{ block.super }}
 {% endblock %}

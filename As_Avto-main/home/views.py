@@ -663,3 +663,25 @@ def get_search_filtered_products(queryset, search_query):
             )
     
     return queryset.order_by('-id')    
+
+
+@require_http_methods(["GET"])
+def download_sifaris_pdf(request, sifaris_id):
+    """Sifaris PDF-sini AJAX ilə yükləmə"""
+    from .export_pdf import generate_sifaris_pdf
+    try:
+        return generate_sifaris_pdf(sifaris_id)
+    except Sifaris.DoesNotExist:
+        return JsonResponse({'error': 'Sifaris tapılmadı'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def download_products_pdf(request):
+    """Bütün məhsulların PDF-sini AJAX ilə yükləmə"""
+    from .export_pdf import generate_products_pdf
+    try:
+        return generate_products_pdf()
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

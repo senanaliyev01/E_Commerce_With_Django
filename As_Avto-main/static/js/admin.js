@@ -208,3 +208,173 @@ document.addEventListener('DOMContentLoaded', function() {
         totalDebtItem.classList.add('zero');
     }
 });
+
+// PDF AJAX Download Function
+document.addEventListener('DOMContentLoaded', function() {
+    initializePdfButtons();
+});
+
+function initializePdfButtons() {
+    // Sifaris PDF düymələri
+    const sifarisButtons = document.querySelectorAll('.pdf-download-btn[data-sifaris-id]');
+    sifarisButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sifarisId = this.getAttribute('data-sifaris-id');
+            downloadPdfAjax(`/api/download-sifaris-pdf/${sifarisId}/`, `sifaris-${sifarisId}.pdf`, this);
+        });
+    });
+    
+    // Mehsullar PDF düyməsi
+    const productsButton = document.getElementById('downloadProductsPdfBtn');
+    if (productsButton) {
+        productsButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            downloadPdfAjax('/api/download-products-pdf/', 'mehsullar.pdf', this);
+        });
+    }
+}
+
+function downloadPdfAjax(url, filename, button) {
+    const originalText = button.textContent;
+    
+    // Düymə statusu dəyişdir
+    button.disabled = true;
+    button.textContent = '⏳ Yüklənir...';
+    button.style.opacity = '0.6';
+    
+    // AJAX sorğusu
+    fetch(url, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.blob();
+    })
+    .then(blob => {
+        // Blob-dan URL yaratmaq
+        const blobUrl = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(link);
+        
+        // Uğur mesajı göstər
+        showNotification('PDF uğurla yükləndi!', 'success');
+        
+        // Düymə statusu bərpa et
+        button.disabled = false;
+        button.textContent = originalText;
+        button.style.opacity = '1';
+    })
+    .catch(error => {
+        console.error('PDF yüklənərkən xəta:', error);
+        showNotification(`Xəta: ${error.message}`, 'error');
+        
+        // Düymə statusu bərpa et
+        button.disabled = false;
+        button.textContent = originalText;
+        button.style.opacity = '1';
+    });
+}
+
+// Notification System
+function showNotification(message, type = 'info') {
+    // Əvvəlki notifikasiyaları sil
+    const existingNotification = document.querySelector('.pdf-notification');
+    if (existingNotification) {
+        existingNotification.remove();
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `pdf-notification pdf-notification-${type}`;
+    notification.textContent = message;
+    
+    const styles = {
+        'position': 'fixed',
+        'top': '20px',
+        'right': '20px',
+        'padding': '15px 20px',
+        'border-radius': '4px',
+        'z-index': '10000',
+        'font-size': '14px',
+        'font-weight': '500',
+        'box-shadow': '0 2px 8px rgba(0,0,0,0.15)',
+        'animation': 'slideIn 0.3s ease-out'
+    };
+    
+    if (type === 'success') {
+        styles.backgroundColor = '#28a745';
+        styles.color = 'white';
+    } else if (type === 'error') {
+        styles.backgroundColor = '#dc3545';
+        styles.color = 'white';
+    } else {
+        styles.backgroundColor = '#17a2b8';
+        styles.color = 'white';
+    }
+    
+    Object.assign(notification.style, styles);
+    document.body.appendChild(notification);
+    
+    // 3 saniyə sonra sil
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+}
+
+// CSS Animation stilləri əlavə et
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+    
+    .pdf-download-btn {
+        transition: all 0.3s ease;
+    }
+    
+    .pdf-download-btn:hover:not(:disabled) {
+        background-color: #2c5282 !important;
+        transform: translateY(-2px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .pdf-download-btn:active:not(:disabled) {
+        transform: translateY(0);
+    }
+    
+    .pdf-download-btn:disabled {
+        cursor: not-allowed;
+    }
+`;
+if (document.head) {
+    document.head.appendChild(style);
+}
