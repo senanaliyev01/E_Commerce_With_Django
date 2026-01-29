@@ -244,11 +244,47 @@ def orders_view(request):
     orders = Sifaris.objects.filter(istifadeci=request.user).order_by('-tarix')
     statistics = Sifaris.get_order_statistics(request.user)
     popup_images = PopupImage.objects.filter(aktiv=True)
-    
+
+    # Show first 5 orders by default
+    initial_limit = 5
+    initial_orders = orders[:initial_limit]
+    has_more = orders.count() > initial_limit
+
     return render(request, 'orders.html', {
-        'orders': orders,
+        'orders': initial_orders,
         'statistics': statistics,
-        'popup_images': popup_images
+        'popup_images': popup_images,
+        'has_more': has_more
+    })
+
+
+@login_required
+def load_more_orders(request):
+    try:
+        offset = int(request.GET.get('offset', 0))
+    except ValueError:
+        offset = 0
+
+    limit = 5
+    orders_qs = Sifaris.objects.filter(istifadeci=request.user).order_by('-tarix')
+    orders = orders_qs[offset:offset + limit]
+    has_more = orders_qs.count() > (offset + limit)
+
+    orders_data = []
+    for order in orders:
+        orders_data.append({
+            'id': order.id,
+            'tarix': order.tarix.strftime('%d.%m.%Y %H:%M') if order.tarix else '',
+            'status': order.get_status_display(),
+            'catdirilma_usulu': order.get_catdirilma_usulu_display(),
+            'umumi_mebleg': str(order.umumi_mebleg),
+            'odenilen_mebleg': str(getattr(order, 'odenilen_mebleg', 0)),
+            'qaliq_borc': str(getattr(order, 'qaliq_borc', 0)),
+        })
+
+    return JsonResponse({
+        'orders': orders_data,
+        'has_more': has_more
     })
 
 @login_required

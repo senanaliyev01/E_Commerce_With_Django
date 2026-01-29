@@ -19,6 +19,7 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('logout/', views.logout_view, name='logout'),
     path('load-more-products/', views.load_more_products, name='load_more_products'),
+    path('load-more-orders/', views.load_more_orders, name='load_more_orders'),
     path('load-more-new-products/', views.load_more_new_products, name='load_more_new_products'),
     path('product-details/<int:product_id>/', views.product_details, name='product_details'),
     path('api/download-sifaris-pdf/<int:sifaris_id>/', views.download_sifaris_pdf, name='download_sifaris_pdf'),
