@@ -440,6 +440,11 @@ def search_suggestions(request):
         mehsullar = Mehsul.objects.all()
         # Use the centralized search function
         mehsullar = get_search_filtered_products(mehsullar, search_query)
+        
+        # Check if there are more than 5 results
+        total_count = mehsullar.count()
+        has_more = total_count > 5
+        
         # Limit to 5 suggestions
         mehsullar = mehsullar[:5]
         
@@ -454,9 +459,9 @@ def search_suggestions(request):
                 'qiymet': str(mehsul.qiymet),
                 'sekil_url': mehsul.sekil.url if mehsul.sekil else None,
             })
-        return JsonResponse({'suggestions': suggestions})
+        return JsonResponse({'suggestions': suggestions, 'has_more': has_more, 'search_query': search_query})
     
-    return JsonResponse({'suggestions': []})
+    return JsonResponse({'suggestions': [], 'has_more': False})
 
 @login_required
 def new_products_view(request):

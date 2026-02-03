@@ -75,6 +75,18 @@ function initializeSearch() {
                                     });
                                     searchResults.appendChild(div);
                                 });
+                                
+                                // Show "Daha Çox Göstər" button if there are more results
+                                if (data.has_more) {
+                                    const showMoreBtn = document.createElement('div');
+                                    showMoreBtn.className = 'search-show-more';
+                                    showMoreBtn.innerHTML = `<a href="/products/?search=${encodeURIComponent(data.search_query)}">Daha Çox Göstər</a>`;
+                                    showMoreBtn.addEventListener('click', () => {
+                                        window.location.href = `/products/?search=${encodeURIComponent(data.search_query)}`;
+                                    });
+                                    searchResults.appendChild(showMoreBtn);
+                                }
+                                
                                 searchResults.style.display = 'block';
                             } else {
                                 searchResults.style.display = 'none';

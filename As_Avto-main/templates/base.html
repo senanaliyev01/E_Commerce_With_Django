@@ -72,9 +72,9 @@
         <div class="search-section">
             <div class="container">
                 <form method="get" action="{% url 'products' %}" class="search-form">
-                    <div class="search-grid">
+                    <!-- Filters Row (Top) -->
+                    <div class="filters-row">
                         <div class="search-item">
-                            <!-- <label for="category">Kateqoriya</label> -->
                             <select id="category" name="kateqoriya">
                                 <option value="">Bütün Kateqoriyalar</option>
                                 {% for category in request.categories %}
@@ -83,7 +83,6 @@
                             </select>
                         </div>
                         <div class="search-item">
-                            <!-- <label for="brand">Marka</label> -->
                             <select id="brand" name="firma">
                                 <option value="">Bütün Firmalar</option>
                                 {% for brand in request.brands %}
@@ -92,7 +91,6 @@
                             </select>
                         </div>
                         <div class="search-item">
-                            <!-- <label for="model">Model</label> -->
                             <select id="model" name="avtomobil">
                                 <option value="">Bütün Avtomobillər</option>
                                 {% for model in request.models %}
@@ -100,8 +98,11 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="search-item">
-                            <!-- <label for="query">Məhsul Adı</label> -->
+                    </div>
+                    
+                    <!-- Search Row (Bottom) -->
+                    <div class="search-row">
+                        <div class="search-item search-container-item">
                             <div class="search-container">
                                 <input type="text" id="query" name="search" placeholder="Kodu daxil edin..." value="{{ request.GET.search }}" autocomplete="off">
                                 <div id="search-results" class="search-results"></div>
