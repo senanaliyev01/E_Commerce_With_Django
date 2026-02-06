@@ -715,7 +715,7 @@ function initializeCartSidebar() {
 
 // Products Page Functions
 function initializeProductsPage() {
-    let offset = 15;
+    let offset = 5;
     let loading = false;
     const tbody = document.getElementById('products-tbody');
     const spinner = document.getElementById('loading-spinner');
@@ -781,7 +781,7 @@ function initializeProductsPage() {
                         });
                         
                         hasMore = data.has_more;
-                        offset += 15;
+                        offset += 5;
                         
                         // Initialize image modal for new images
                         initializeImageModal();
