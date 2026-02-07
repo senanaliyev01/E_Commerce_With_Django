@@ -19,6 +19,8 @@ def custom_404(request, exception=None):
     return HttpResponseNotFound(render(request, '404.html').content)
 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('base')
     error_message = None
     if request.method == 'POST':
         username = request.POST['username']
@@ -527,6 +529,8 @@ def logout_view(request):
     return redirect('login')
 
 def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('base')
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')

@@ -176,15 +176,6 @@ SIMPLEUI_FAVICON = '/static/images/favicon.png'
 # BAŞLIQLAR
 # ============================================
 
-SIMPLEUI_CONFIG = {
-    'system_title': 'Avto Ehtiyat Hissələri – Admin',
-    'system_header': 'Avto Ehtiyat Hissələri',
-    'system_name': 'Admin Panel',
-
-    # favicon
-    'favicon': '/static/images/favicon.png',
-}
-
 # ============================================
 # MENYU VƏ İKONLAR
 # ============================================
