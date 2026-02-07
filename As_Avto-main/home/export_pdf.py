@@ -162,15 +162,30 @@ def generate_sifaris_pdf(sifaris_id):
         print(f"Logo əlavə edilərkən xəta: {e}")
 
     # Sifariş bilgileri stil
+    infoLabelStyle = ParagraphStyle(
+        'InfoLabelStyle',
+        parent=styles['Normal'],
+        fontName='NotoSans',
+        fontSize=8,
+        textColor=colors.HexColor('#FFFFFF'),
+        spaceAfter=0,
+        spaceBefore=0,
+        alignment=1,  # Merkez
+        fontBold=True,
+        leading=10
+    )
+    
     infoValueStyle = ParagraphStyle(
         'InfoValueStyle',
         parent=styles['Normal'],
         fontName='NotoSans',
-        fontSize=9,
-        textColor=colors.black,
+        fontSize=10,
+        textColor=colors.HexColor('#2B5173'),
         spaceAfter=0,
         spaceBefore=0,
-        alignment=1  # Merkez
+        alignment=1,  # Merkez
+        fontBold=True,
+        leading=12
     )
 
     # Tarixi Azərbaycan formatında
@@ -183,22 +198,46 @@ def generate_sifaris_pdf(sifaris_id):
     local_time = timezone.localtime(sifaris.tarix)
     az_date = f"{local_time.day} {az_months[local_time.month]} {local_time.year}, {local_time.strftime('%H:%M')}"
     
-    # Sifariş bilgileri - 4 sütunlu tablo
+    # Sifariş bilgileri - 4 sütunlu professional tablo
     info_data = [
         [
-            Paragraph(f"<b>Müştəri</b><br/>{sifaris.istifadeci.username}", infoValueStyle),
-            Paragraph(f"<b>Tarix</b><br/>{az_date}", infoValueStyle),
-            Paragraph(f"<b>Çatdırılma</b><br/>{sifaris.get_catdirilma_usulu_display()}", infoValueStyle),
-            Paragraph(f"<b>Sifariş №</b><br/>{sifaris_id}", infoValueStyle),
+            Paragraph('Müştəri', infoLabelStyle),
+            Paragraph('Tarix', infoLabelStyle),
+            Paragraph('Çatdırılma', infoLabelStyle),
+            Paragraph('Sifariş №', infoLabelStyle),
+        ],
+        [
+            Paragraph(sifaris.istifadeci.username, infoValueStyle),
+            Paragraph(az_date, infoValueStyle),
+            Paragraph(sifaris.get_catdirilma_usulu_display(), infoValueStyle),
+            Paragraph(str(sifaris_id), infoValueStyle),
         ]
     ]
     
     info_table = Table(info_data, colWidths=[130, 130, 130, 130])
     info_table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#F0F4F8')),
-        ('BORDER', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
-        ('PADDING', (0, 0), (-1, -1), 10),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        # Başlıq sətri - koyu mavi
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#FFFFFF')),
+        
+        # Məlumat sətri - açıq mavi
+        ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#E8F0F6')),
+        ('TEXTCOLOR', (0, 1), (-1, 1), colors.HexColor('#2B5173')),
+        
+        # Sərhədlər - qalin xətlər
+        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#2B5173')),
+        ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor('#2B5173')),
+        ('LINELEFT', (0, 0), (0, -1), 1.5, colors.HexColor('#2B5173')),
+        ('LINERIGHT', (-1, 0), (-1, -1), 1.5, colors.HexColor('#2B5173')),
+        ('LINEBELOW', (0, -1), (-1, -1), 1.5, colors.HexColor('#2B5173')),
+        
+        # Daxili xətlər
+        ('LINEBETWEEN', (0, 0), (-1, -1), 1, colors.HexColor('#B8D1E8')),
+        
+        # Padding və hizalama
+        ('PADDING', (0, 0), (-1, 0), 12),
+        ('PADDING', (0, 1), (-1, 1), 15),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
     ]))
     
