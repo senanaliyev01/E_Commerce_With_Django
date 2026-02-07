@@ -272,5 +272,49 @@
     <a href="https://wa.me/+994773059585" target="_blank" class="whatsapp-chat">
         <i class="fab fa-whatsapp"></i>
     </a>
+
+    <!-- Note Modal with Delivery Method -->
+    <div id="noteModal" class="note-modal">
+        <div class="note-modal-content">
+            <span class="note-modal-close" onclick="closeNoteModal()">&times;</span>
+            <div class="note-modal-header">Sifarişinizi tamamlayın</div>
+            <form id="noteForm">
+                <div class="form-group">
+                    <label for="deliveryMethod">Çatdırılma üsulu:</label>
+                    <div class="delivery-options-modal">
+                        <label class="delivery-option-radio">
+                            <input type="radio" name="catdirilma_usulu" value="TAXI" id="delivery-taxi" required>
+                            <span>Taksi ilə çatdırılma</span>
+                        </label>
+                        <label class="delivery-option-radio">
+                            <input type="radio" name="catdirilma_usulu" value="PICKUP" id="delivery-pickup" required>
+                            <span>Özüm götürəcəm</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="note-form-group">
+                    <label for="noteText">Qeyd (istəğə bağlı):</label>
+                    <textarea id="noteText" name="qeyd" placeholder="Sifarişiniz ilə bağlı əlavə qeydlərinizi yazın..."></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-cancel" onclick="closeNoteModal()">Ləğv et</button>
+                    <button type="button" class="btn btn-confirm" onclick="submitNoteAndConfirm()">Sifarişi tesdiq et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="confirmation-modal">
+        <div class="confirmation-modal-content">
+            <span class="confirmation-modal-close" onclick="closeConfirmationModal()">&times;</span>
+            <div class="confirmation-modal-header">Tesdiq edin</div>
+            <div class="confirmation-message">Sifarişi tesdiq etmək istədiyinizden əminsiz?</div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-cancel" onclick="closeConfirmationModal()">Xeyir</button>
+                <button type="button" class="btn btn-confirm" onclick="confirmOrderSubmit()">Bəli</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

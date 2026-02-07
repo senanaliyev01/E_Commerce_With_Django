@@ -32,7 +32,7 @@
                 {% for item in cart_items %}
                     <tr class="cart-item" data-product-id="{{ item.product.id }}">
                         <td>
-                            <input type="checkbox" name="selected_items[]" value="{{ item.product.id }}" class="item-checkbox select-checkbox" form="checkout-form">
+                            <input type="checkbox" name="selected_items[]" value="{{ item.product.id }}" class="item-checkbox select-checkbox">
                         </td>
                         <td><img src="{{ item.product.sekil.url }}" alt="{{ item.product.adi }}" class="product-image" onclick="openImageModal('{{ item.product.sekil.url }}')"></td>
                         <td>{{ item.product.brend_kod }}</td>
@@ -61,26 +61,15 @@
 
         <form method="POST" action="{% url 'checkout' %}" id="checkout-form">
             {% csrf_token %}
+            <input type="hidden" name="qeyd" id="hidden-note" value="">
+            <input type="hidden" name="catdirilma_usulu" id="hidden-delivery" value="">
             <div class="cart-summary">
                 <div class="cart-total">
                     <span class="total-label">Seçilmiş məbləğ:</span>
                     <span class="total-value" id="selected-total">0.00 ₼</span>
                 </div>
-                <div class="delivery-method">
-                    <h4>Çatdırılma üsulu</h4>
-                    <div class="delivery-options">
-                        <label class="delivery-option">
-                            <input type="radio" name="catdirilma_usulu" value="TAXI" required>
-                            <span>Taksi ilə çatdırılma</span>
-                        </label>
-                        <label class="delivery-option">
-                            <input type="radio" name="catdirilma_usulu" value="PICKUP" required>
-                            <span>Özüm götürəcəm</span>
-                        </label>
-                    </div>
-                </div>
                 <div class="checkout-form">
-                    <button type="submit" class="btn btn-primary" id="checkout-button" disabled>Sifarişi göndər</button>
+                    <button type="button" class="btn btn-primary" id="checkout-button" onclick="openNoteModal()" disabled>Sifarişi göndər</button>
                 </div>
             </div>
         </form>

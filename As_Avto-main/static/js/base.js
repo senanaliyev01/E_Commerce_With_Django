@@ -165,11 +165,14 @@ function initializeSearch() {
 }
 
 function initializeCart() {
-    const selectAll = document.getElementById('select-all');
-    const checkboxes = document.querySelectorAll('.item-checkbox');
-    const selectedTotal = document.getElementById('selected-total');
-    const checkoutButton = document.getElementById('checkout-button');
-    const updateForms = document.querySelectorAll('.update-form');
+    const cartContainer = document.querySelector('.cart-container');
+    if (!cartContainer) return;
+    
+    const selectAll = cartContainer.querySelector('#select-all');
+    const checkboxes = cartContainer.querySelectorAll('.item-checkbox');
+    const selectedTotal = cartContainer.querySelector('#selected-total');
+    const checkoutButton = cartContainer.querySelector('#checkout-button');
+    const updateForms = cartContainer.querySelectorAll('.update-form');
 
     // Add event listener for update forms
     if (updateForms) {
@@ -736,6 +739,15 @@ function initializeCartSidebar() {
                     
                     // Reinitialize cart functionality for the loaded content
                     initializeCart();
+                    
+                    // Prevent checkout form submission and open modal instead
+                    const checkoutForm = document.getElementById('checkout-form');
+                    if (checkoutForm) {
+                        checkoutForm.addEventListener('submit', function(e) {
+                            e.preventDefault();
+                            openNoteModal();
+                        });
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading cart content:', error);
@@ -1000,4 +1012,156 @@ function initializeHeaderMessages() {
     // Hər 5 saniyədən bir növbəti mesaja keç
     setInterval(nextMessage, interval);
 }
+
+// Note Modal Functions
+function openNoteModal() {
+    console.log('openNoteModal called');
+    
+    // Get cart container
+    const cartContainer = document.querySelector('.cart-container');
+    console.log('Cart container found:', !!cartContainer);
+    
+    if (!cartContainer) {
+        showMessage('error', 'Səbət bulunamadı.');
+        return;
+    }
+    
+    // Get all checked checkboxes
+    const selectedCheckboxes = cartContainer.querySelectorAll('.item-checkbox:checked');
+    
+    console.log('Selected checkboxes count:', selectedCheckboxes.length);
+    selectedCheckboxes.forEach(cb => console.log('Checkbox value:', cb.value));
+    
+    if (selectedCheckboxes.length === 0) {
+        showMessage('error', 'Zəhmət olmasa ən azı bir məhsul seçin.');
+        return;
+    }
+    
+    const noteModal = document.getElementById('noteModal');
+    const noteText = document.getElementById('noteText');
+    noteText.value = ''; // Clear previous note
+    
+    // Reset delivery method in modal
+    const modalDeliveryInputs = document.querySelectorAll('#noteForm input[name="catdirilma_usulu"]');
+    modalDeliveryInputs.forEach(input => input.checked = false);
+    
+    noteModal.style.display = 'block';
+}
+
+function closeNoteModal() {
+    const noteModal = document.getElementById('noteModal');
+    noteModal.style.display = 'none';
+}
+
+function submitNoteAndConfirm() {
+    // Validate delivery method in modal
+    const modalDeliveryMethod = document.querySelector('#noteForm input[name="catdirilma_usulu"]:checked');
+    if (!modalDeliveryMethod) {
+        showMessage('error', 'Zəhmət olmasa çatdırılma üsulunu seçin.');
+        return;
+    }
+    
+    const noteText = document.getElementById('noteText').value;
+    const hiddenNote = document.getElementById('hidden-note');
+    const hiddenDelivery = document.getElementById('hidden-delivery');
+    
+    hiddenNote.value = noteText;
+    hiddenDelivery.value = modalDeliveryMethod.value;
+    
+    // Close note modal and open confirmation modal
+    closeNoteModal();
+    openConfirmationModal();
+}
+
+function openConfirmationModal() {
+    const confirmationModal = document.getElementById('confirmationModal');
+    confirmationModal.style.display = 'block';
+}
+
+function closeConfirmationModal() {
+    const confirmationModal = document.getElementById('confirmationModal');
+    confirmationModal.style.display = 'none';
+}
+
+function confirmOrderSubmit() {
+    const checkoutForm = document.getElementById('checkout-form');
+    
+    if (!checkoutForm) {
+        showMessage('error', 'Səbət formu tapılmadı.');
+        return;
+    }
+    
+    // Get cart container
+    const cartContainer = document.querySelector('.cart-container');
+    if (!cartContainer) {
+        showMessage('error', 'Səbət bulunamadı.');
+        closeConfirmationModal();
+        return;
+    }
+    
+    // Get all checked checkboxes from cart
+    const selectedCheckboxes = cartContainer.querySelectorAll('.item-checkbox:checked');
+    
+    console.log('confirmOrderSubmit - Selected checkboxes:', selectedCheckboxes.length);
+    
+    if (selectedCheckboxes.length === 0) {
+        showMessage('error', 'Zəhmət olmasa ən azı bir məhsul seçin.');
+        closeConfirmationModal();
+        return;
+    }
+    
+    // Remove old hidden selected_items inputs
+    checkoutForm.querySelectorAll('input[name="selected_items[]"]').forEach(input => input.remove());
+    
+    // Add new hidden inputs for each selected item
+    selectedCheckboxes.forEach(checkbox => {
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'selected_items[]';
+        hiddenInput.value = checkbox.value;
+        checkoutForm.appendChild(hiddenInput);
+        console.log('Added hidden input for product:', checkbox.value);
+    });
+    
+    // Add delivery method
+    const hiddenDelivery = document.getElementById('hidden-delivery');
+    let deliveryInput = checkoutForm.querySelector('input[name="catdirilma_usulu"]');
+    if (!deliveryInput) {
+        deliveryInput = document.createElement('input');
+        deliveryInput.type = 'hidden';
+        deliveryInput.name = 'catdirilma_usulu';
+        checkoutForm.appendChild(deliveryInput);
+    }
+    deliveryInput.value = hiddenDelivery.value;
+    console.log('Delivery method set to:', hiddenDelivery.value);
+    
+    // Add note
+    const hiddenNote = document.getElementById('hidden-note');
+    let noteInput = checkoutForm.querySelector('input[name="qeyd"]');
+    if (!noteInput) {
+        noteInput = document.createElement('input');
+        noteInput.type = 'hidden';
+        noteInput.name = 'qeyd';
+        checkoutForm.appendChild(noteInput);
+    }
+    noteInput.value = hiddenNote.value;
+    console.log('Note set to:', hiddenNote.value);
+    
+    closeConfirmationModal();
+    console.log('Submitting form...');
+    checkoutForm.submit();
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    const noteModal = document.getElementById('noteModal');
+    const confirmationModal = document.getElementById('confirmationModal');
+    
+    if (event.target == noteModal) {
+        closeNoteModal();
+    }
+    if (event.target == confirmationModal) {
+        closeConfirmationModal();
+    }
+});
 

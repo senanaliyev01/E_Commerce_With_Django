@@ -300,6 +300,7 @@ def checkout(request):
         # Seçilmiş məhsulları al
         selected_items = request.POST.getlist('selected_items[]')
         catdirilma_usulu = request.POST.get('catdirilma_usulu')
+        qeyd = request.POST.get('qeyd', '').strip()  # Get note from form
         
         if not selected_items:
             messages.error(request, 'Zəhmət olmasa ən azı bir məhsul seçin.')
@@ -334,11 +335,12 @@ def checkout(request):
                 remaining_cart[product_id] = quantity
 
         try:
-            # Sifariş yaradırıq
+            # Sifariş yaradırıq (qeydi də əlavə edirik)
             order = Sifaris.objects.create(
                 istifadeci=request.user,
                 umumi_mebleg=total,
-                catdirilma_usulu=catdirilma_usulu
+                catdirilma_usulu=catdirilma_usulu,
+                qeyd=qeyd if qeyd else None  # Add note if provided
             )
 
             # Sifariş elementlərini yaradırıq

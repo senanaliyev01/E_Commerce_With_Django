@@ -231,13 +231,24 @@ class SifarisItemInline(admin.TabularInline):
 
 @admin.register(Sifaris)
 class SifarisAdmin(admin.ModelAdmin):
-    list_display = ['id', 'istifadeci', 'tarix', 'status', 'catdirilma_usulu', 'umumi_mebleg', 'odenilen_mebleg', 'qaliq_borc', 'pdf_button']
+    list_display = ['id', 'istifadeci', 'qeyd_display', 'tarix', 'status', 'catdirilma_usulu', 'umumi_mebleg', 'odenilen_mebleg', 'qaliq_borc', 'pdf_button']
     list_filter = ['status', 'catdirilma_usulu', 'tarix', 'istifadeci']
     search_fields = ['istifadeci__username']
     readonly_fields = ['istifadeci', 'tarix', 'umumi_mebleg', 'qaliq_borc']
     fields = ['istifadeci', 'tarix', 'status', 'catdirilma_usulu', 'umumi_mebleg', 'odenilen_mebleg', 'qaliq_borc', 'qeyd']
     inlines = [SifarisItemInline]
     change_list_template = 'admin/sifaris_change_list.html'
+
+    def qeyd_display(self, obj):
+        """Qeydi maksimum 51 karakterə kəs və uzun olsa ... əlavə et"""
+        if obj.qeyd:
+            max_length = 51  # "Salam Ozum Gelib Goturecem.Zehmet Olmasa Hazirlayin" uzunluğu
+            if len(obj.qeyd) > max_length:
+                return format_html('{}<span title="{}" style="cursor: help;">...</span>', 
+                                 obj.qeyd[:max_length], obj.qeyd)
+            return obj.qeyd
+        return '-'
+    qeyd_display.short_description = 'Qeyd'
 
     def pdf_button(self, obj):
         return format_html(

@@ -130,7 +130,7 @@ class Mehsul(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.adi} - {self.brend_kod} - {self.oem}"
+        return f"Məhsul: {self.adi} | Kodu: {self.brend_kod} | Firma: {self.firma.adi}"
     
     class Meta:
         verbose_name = 'Məhsul'

@@ -2955,3 +2955,209 @@ body {
         font-size: 25px;
     }
 }
+
+/* Note Modal Styles */
+.note-modal, .confirmation-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.note-modal-content, .confirmation-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 30px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.note-modal-close, .confirmation-modal-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.note-modal-close:hover, .confirmation-modal-close:hover,
+.note-modal-close:focus, .confirmation-modal-close:focus {
+    color: var(--accent-color);
+}
+
+.note-modal-header, .confirmation-modal-header {
+    font-size: 24px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.note-form-group {
+    margin-bottom: 20px;
+}
+
+.note-form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.note-form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 120px;
+    transition: border-color 0.3s;
+}
+
+.note-form-group textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.3s;
+}
+
+.btn-confirm {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-confirm:hover {
+    background-color: #2980b9;
+    transform: translateY(-2px);
+}
+
+.btn-cancel {
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+}
+
+.btn-cancel:hover {
+    background-color: #e0e0e0;
+}
+
+.confirmation-message {
+    font-size: 16px;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Responsive Modal */
+@media (max-width: 768px) {
+    .note-modal-content, .confirmation-modal-content {
+        width: 85%;
+        padding: 20px;
+        margin: 30% auto;
+    }
+    
+    .note-modal-header, .confirmation-modal-header {
+        font-size: 20px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+    }
+    
+    .modal-buttons button {
+        width: 100%;
+    }
+}
+
+/* Form Group Styles for Modal */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.delivery-options-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.delivery-option-radio {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.delivery-option-radio:hover {
+    background-color: var(--light-gray);
+    border-color: var(--secondary-color);
+}
+
+.delivery-option-radio input[type="radio"] {
+    margin-right: 12px;
+    cursor: pointer;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--secondary-color);
+}
+
+.delivery-option-radio span {
+    font-size: 14px;
+    color: var(--text-color);
+    flex: 1;
+}
