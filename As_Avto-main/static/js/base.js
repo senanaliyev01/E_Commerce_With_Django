@@ -34,7 +34,64 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize Header Messages
     initializeHeaderMessages();
+    // Initialize orders "load more" if present
+    initializeOrdersLoadMore();
 });
+
+// Load more orders handler (previously inline in templates/orders.html)
+function initializeOrdersLoadMore() {
+    const btn = document.getElementById('load-more-orders');
+    if (!btn) return;
+
+    btn.addEventListener('click', async function() {
+        let offset = parseInt(btn.dataset.offset, 10) || 0;
+        const url = btn.dataset.url || '/load-more-orders/';
+        btn.disabled = true;
+        const originalText = btn.textContent;
+        btn.textContent = 'Yüklənir...';
+
+        try {
+            const resp = await fetch(url + '?offset=' + offset, { method: 'GET' });
+            if (!resp.ok) throw new Error('Network error');
+            const data = await resp.json();
+            const tbody = document.getElementById('orders-tbody');
+            data.orders.forEach(order => {
+                const tr = document.createElement('tr');
+
+                // Determine status class using status_code (falls back to display text lowercased)
+                const statusClassRaw = (order.status_code || order.status || '').toString().toLowerCase();
+                const safeStatusClass = statusClassRaw.replace(/[^a-z0-9\-_]/g, '-');
+
+                tr.innerHTML = `
+                    <td><a href="/orders/${order.id}/" class="order-link">#${order.id}</a></td>
+                    <td>${order.tarix}</td>
+                    <td><span class="status-badge status-${safeStatusClass}">${order.status}</span></td>
+                    <td><span class="delivery-badge">${order.catdirilma_usulu}</span></td>
+                    <td>${order.umumi_mebleg} ₼</td>
+                    <td>${order.odenilen_mebleg} ₼</td>
+                    <td>${order.qaliq_borc} ₼</td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            offset += data.orders.length;
+            btn.dataset.offset = offset;
+
+            if (data.has_more) {
+                btn.disabled = false;
+                btn.textContent = originalText || 'Daha çox göstər';
+            } else {
+                btn.textContent = 'Hamısı göstərildi';
+                btn.disabled = true;
+            }
+        } catch (e) {
+            console.error(e);
+            btn.disabled = false;
+            btn.textContent = 'Xəta, yenidən cəhd et';
+        }
+    });
+}
 
 function initializeSearch() {
     const searchInput = document.getElementById('query');

@@ -72,7 +72,7 @@
             </table>
             {% if has_more %}
             <div class="load-more-container" style="text-align:center; margin-top:15px;">
-                <button id="load-more-orders" class="btn btn-secondary" data-offset="{{ orders|length }}">Daha çox göstər</button>
+                <button id="load-more-orders" class="btn btn-secondary" data-offset="{{ orders|length }}" data-url="{% url 'load_more_orders' %}">Daha çox göstər</button>
             </div>
             {% endif %}
         </div>
@@ -84,51 +84,5 @@
         </div>
     {% endif %}
 </div>
-<!-- Load more orders script -->
-{% if has_more %}
-<script>
-document.addEventListener('DOMContentLoaded', function(){
-    const btn = document.getElementById('load-more-orders');
-    if(!btn) return;
-    btn.addEventListener('click', async function(){
-        let offset = parseInt(btn.dataset.offset,10) || 0;
-        btn.disabled = true;
-        const originalText = btn.textContent;
-        btn.textContent = 'Yüklənir...';
-        try {
-            const resp = await fetch("{% url 'load_more_orders' %}?offset="+offset);
-            if(!resp.ok) throw new Error('Network error');
-            const data = await resp.json();
-            const tbody = document.getElementById('orders-tbody');
-            data.orders.forEach(order => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><a href="/orders/${order.id}/" class="order-link">#${order.id}</a></td>
-                    <td>${order.tarix}</td>
-                    <td><span class="status-badge status-${(order.status || '').toLowerCase()}">${order.status}</span></td>
-                    <td><span class="delivery-badge">${order.catdirilma_usulu}</span></td>
-                    <td>${order.umumi_mebleg} ₼</td>
-                    <td>${order.odenilen_mebleg} ₼</td>
-                    <td>${order.qaliq_borc} ₼</td>
-                `;
-                tbody.appendChild(tr);
-            });
-            offset += data.orders.length;
-            btn.dataset.offset = offset;
-            if(data.has_more){
-                btn.disabled = false;
-                btn.textContent = originalText || 'Daha çox göstər';
-            } else {
-                btn.textContent = 'Hamısı göstərildi';
-                btn.disabled = true;
-            }
-        } catch(e){
-            console.error(e);
-            btn.disabled = false;
-            btn.textContent = 'Xəta, yenidən cəhd et';
-        }
-    });
-});
-</script>
-{% endif %}
+{% comment %} JavaScript for loading more orders moved to static/js/base.js {% endcomment %}
 {% endblock %}

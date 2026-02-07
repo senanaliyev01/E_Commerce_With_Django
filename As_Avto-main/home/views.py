@@ -276,6 +276,7 @@ def load_more_orders(request):
             'id': order.id,
             'tarix': order.tarix.strftime('%d.%m.%Y %H:%M') if order.tarix else '',
             'status': order.get_status_display(),
+            'status_code': order.status,
             'catdirilma_usulu': order.get_catdirilma_usulu_display(),
             'umumi_mebleg': str(order.umumi_mebleg),
             'odenilen_mebleg': str(getattr(order, 'odenilen_mebleg', 0)),
