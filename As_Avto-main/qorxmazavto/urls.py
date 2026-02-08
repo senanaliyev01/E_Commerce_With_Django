@@ -30,6 +30,6 @@ if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
-admin.site.site_header = "Avto Ehtiyat Hissələri Admin"
-admin.site.site_title = "Avto Admin"
+admin.site.site_header = "Qorxmaz Avto Admin Paneli"
+admin.site.site_title = "Qorxmaz Avto Admin"
 admin.site.index_title = "İdarəetmə Paneli"    

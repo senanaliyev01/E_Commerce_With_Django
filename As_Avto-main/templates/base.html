@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AS-AVTO{% endblock %}</title>
+    <title>{% block title %}Qorxmaz Avto{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
@@ -19,7 +19,7 @@
                 <div class="header-content">
                     <div class="logo">
                         <a href="{% url 'base' %}">
-                            <img src="{% static 'images/Header_Logo.png' %}" alt="AS-AVTO" class="logo-img">
+                            <img src="{% static 'images/Header_Logo.png' %}" alt="Qorxmaz Avto" class="logo-img">
                         </a>
                     </div>
                     <div class="header-right">
@@ -31,8 +31,8 @@
                                 <li><a href="{% url 'new_products' %}" class="nav-link {% if request.resolver_match.url_name == 'new_products' %}active{% endif %}"><i class="fas fa-star"></i> Yeni Məhsullar</a></li>
                                 <li><a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}"><i class="fas fa-clipboard-list"></i> Sifarişlərim</a></li>
                                 <li>
-                                    <a href="tel:+994702754499" class="nav-link">
-                                        <i class="fas fa-phone"></i> +994 70 275 44 99
+                                    <a href="tel:+994552369009" class="nav-link">
+                                        <i class="fas fa-phone"></i> +994 55 236 90 09
                                     </a>
                                 </li>
                                 <li>
@@ -269,7 +269,7 @@
     <div id="sidebarOverlay" class="sidebar-overlay"></div>
 
     <!-- WhatsApp Chat Bot -->
-    <a href="https://wa.me/+994773059585" target="_blank" class="whatsapp-chat">
+    <a href="https://wa.me/+994552369009" target="_blank" class="whatsapp-chat">
         <i class="fab fa-whatsapp"></i>
     </a>
 

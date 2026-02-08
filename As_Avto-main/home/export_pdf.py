@@ -62,7 +62,7 @@ def generate_products_pdf():
 
     styles = getSampleStyleSheet()
     styles['Title'].fontName = 'NotoSans'
-    title = Paragraph("AS AVTO +994 77 305 95 85", styles['Title'])
+    title = Paragraph("Qorxmaz Avto +994 55 236 90 09", styles['Title'])
     elements.append(title)
     elements.append(Spacer(1, 20))
 

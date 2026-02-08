@@ -21,11 +21,11 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True  # Prod üçün False qoyun, testdə True ola bilər
 
-ALLOWED_HOSTS = ['localhost','127.0.0.1','0.0.0.0', 'as-avto.com', 'www.as-avto.com']
+ALLOWED_HOSTS = ['localhost','127.0.0.1','0.0.0.0', 'qorxmazavto.com', 'www.qorxmazavto.com']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://as-avto.com',
-    'https://www.as-avto.com',
+    'https://qorxmazavto.com',
+    'https://www.qorxmazavto.com',
 ]
 
 # Application definition
