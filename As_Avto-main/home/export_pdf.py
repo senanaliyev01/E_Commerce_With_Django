@@ -7,16 +7,52 @@ from reportlab.pdfbase.ttfonts import TTFont
 import io
 from django.http import HttpResponse
 from django.utils import timezone
+from django.db.models import Prefetch
 from .models import Mehsul, Sifaris
+
+# Module-level font registration (one-time only)
+try:
+    pdfmetrics.registerFont(TTFont('NotoSans', 'static/fonts/NotoSans-Regular.ttf'))
+except:
+    pass
+
+# Module-level style cache
+_styles_cache = {}
+
+def _get_style(name, **kwargs):
+    """Get cached style or create new one"""
+    cache_key = name
+    if cache_key not in _styles_cache:
+        styles = getSampleStyleSheet()
+        if name == 'header':
+            _styles_cache[cache_key] = ParagraphStyle(
+                'HeaderStyle',
+                parent=styles['Normal'],
+                fontName='NotoSans',
+                fontSize=9,
+                textColor=colors.whitesmoke,
+                alignment=1,
+                spaceAfter=0,
+                spaceBefore=0,
+                leading=10
+            )
+        elif name == 'content':
+            _styles_cache[cache_key] = ParagraphStyle(
+                'ContentStyle',
+                parent=styles['Normal'],
+                fontName='NotoSans',
+                fontSize=8,
+                alignment=1,
+                spaceAfter=0,
+                spaceBefore=0,
+                leading=10
+            )
+    return _styles_cache[cache_key]
 
 
 def generate_products_pdf():
     """Bütün məhsulların PDF-sini yaratmaq"""
     
-    # Font qeydiyyatı
-    pdfmetrics.registerFont(TTFont('NotoSans', 'static/fonts/NotoSans-Regular.ttf'))
-
-    # PDF yaratmaq
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="mehsullar.pdf"'
 
@@ -24,39 +60,19 @@ def generate_products_pdf():
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     elements = []
 
-    # Başlıq
     styles = getSampleStyleSheet()
     styles['Title'].fontName = 'NotoSans'
     title = Paragraph("AS AVTO +994 77 305 95 85", styles['Title'])
     elements.append(title)
     elements.append(Spacer(1, 20))
 
-    # Başlıq stilləri - Sifaris kimi
-    headerStyle = ParagraphStyle(
-        'HeaderStyle',
-        parent=styles['Normal'],
-        fontName='NotoSans',
-        fontSize=9,
-        textColor=colors.whitesmoke,
-        alignment=1,  # Mərkəz
-        spaceAfter=0,
-        spaceBefore=0,
-        leading=10
-    )
+    headerStyle = _get_style('header')
+    contentStyle = _get_style('content')
 
-    # Məhsul məlumatları üçün stil - Sifaris kimi
-    contentStyle = ParagraphStyle(
-        'ContentStyle',
-        parent=styles['Normal'],
-        fontName='NotoSans',
-        fontSize=8,
-        alignment=1,  # Mərkəz
-        spaceAfter=0,
-        spaceBefore=0,
-        leading=10
-    )
-
-    # Cədvəl başlıqları - Paragraph ilə
+    # Fetch all data at once with select_related for optimization
+    mehsullar = Mehsul.objects.select_related('firma', 'vitrin').all()
+    
+    # Build table data efficiently
     headers = [
         Paragraph('№', headerStyle),
         Paragraph('Kod', headerStyle),
@@ -67,53 +83,43 @@ def generate_products_pdf():
         Paragraph('Qiymət', headerStyle)
     ]
     
-    # Məhsul məlumatları
     data = [headers]
-    for index, mehsul in enumerate(Mehsul.objects.all(), 1):
+    for index, mehsul in enumerate(mehsullar, 1):
         row = [
             Paragraph(str(index), contentStyle),
-            Paragraph(mehsul.brend_kod, contentStyle),
+            Paragraph(mehsul.brend_kod or '', contentStyle),
             Paragraph(mehsul.firma.adi if mehsul.firma else '-', contentStyle),
-            Paragraph(mehsul.adi, contentStyle),  # Uzun adlar alta düşəcək
+            Paragraph(mehsul.adi or '', contentStyle),
             Paragraph(str(mehsul.vitrin.nomre) if mehsul.vitrin else '-', contentStyle),
             Paragraph(str(mehsul.stok), contentStyle),
             Paragraph(f"{mehsul.qiymet} ₼", contentStyle)
         ]
         data.append(row)
 
-    # Cədvəl yaratmaq - Sifaris kimi
     table = Table(data)
     table.setStyle(TableStyle([
-        # Başlıq sətri
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('FONTNAME', (0, 0), (-1, 0), 'NotoSans'),
         ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('TOPPADDING', (0, 0), (-1, 0), 5),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
-        
-        # Məhsul sətirləri
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTNAME', (0, 1), (-1, -1), 'NotoSans'),
         ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('TOPPADDING', (0, 1), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
-        
-        # Cədvəl xətləri
         ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
         ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#2B5173')),
-        
-        # Sütun enləri - Sifaris kimi
         ('COLWIDTHS', (0, 0), (-1, -1), '*'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
     ]))
     
     elements.append(table)
-
-    # PDF-i yarat
     doc.build(elements)
+    
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
@@ -123,11 +129,12 @@ def generate_products_pdf():
 
 def generate_sifaris_pdf(sifaris_id):
     """Sifariş PDF-sini yaratmaq"""
-    sifaris = Sifaris.objects.get(id=sifaris_id)
+    
+    # Optimized query with prefetch_related
+    sifaris = Sifaris.objects.select_related('istifadeci').prefetch_related('sifarisitem_set__mehsul__firma', 'sifarisitem_set__mehsul__vitrin').get(id=sifaris_id)
     sifaris_items = sifaris.sifarisitem_set.all()
     statistics = Sifaris.get_order_statistics(sifaris.istifadeci)
 
-    # PDF yaratmaq
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="sifaris_{sifaris_id}.pdf"'
 
@@ -135,10 +142,6 @@ def generate_sifaris_pdf(sifaris_id):
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20, leftMargin=20, topMargin=20, bottomMargin=20)
     elements = []
 
-    # Universal font qeydiyyatı
-    pdfmetrics.registerFont(TTFont('NotoSans', 'static/fonts/NotoSans-Regular.ttf'))
-
-    # Logo və başlıq
     styles = getSampleStyleSheet()
     styles['Title'].fontName = 'NotoSans'
     styles['Normal'].fontName = 'NotoSans'
@@ -158,10 +161,10 @@ def generate_sifaris_pdf(sifaris_id):
         ]))
         elements.append(header_table)
         elements.append(Spacer(1, 15))
-    except Exception as e:
-        print(f"Logo əlavə edilərkən xəta: {e}")
+    except:
+        pass
 
-    # Sifariş bilgileri stil
+    # Info styles
     infoLabelStyle = ParagraphStyle(
         'InfoLabelStyle',
         parent=styles['Normal'],
@@ -170,7 +173,7 @@ def generate_sifaris_pdf(sifaris_id):
         textColor=colors.HexColor('#FFFFFF'),
         spaceAfter=0,
         spaceBefore=0,
-        alignment=1,  # Merkez
+        alignment=1,
         fontBold=True,
         leading=10
     )
@@ -183,12 +186,12 @@ def generate_sifaris_pdf(sifaris_id):
         textColor=colors.HexColor('#2B5173'),
         spaceAfter=0,
         spaceBefore=0,
-        alignment=1,  # Merkez
+        alignment=1,
         fontBold=True,
         leading=12
     )
 
-    # Tarixi Azərbaycan formatında
+    # Date formatting
     az_months = {
         1: 'Yanvar', 2: 'Fevral', 3: 'Mart', 4: 'Aprel',
         5: 'May', 6: 'İyun', 7: 'İyul', 8: 'Avqust',
@@ -198,7 +201,7 @@ def generate_sifaris_pdf(sifaris_id):
     local_time = timezone.localtime(sifaris.tarix)
     az_date = f"{local_time.day} {az_months[local_time.month]} {local_time.year}, {local_time.strftime('%H:%M')}"
     
-    # Sifariş bilgileri - 4 sütunlu professional tablo
+    # Order info
     info_data = [
         [
             Paragraph('Müştəri', infoLabelStyle),
@@ -216,25 +219,16 @@ def generate_sifaris_pdf(sifaris_id):
     
     info_table = Table(info_data, colWidths=[130, 130, 130, 130])
     info_table.setStyle(TableStyle([
-        # Başlıq sətri - koyu mavi
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#FFFFFF')),
-        
-        # Məlumat sətri - açıq mavi
         ('BACKGROUND', (0, 1), (-1, 1), colors.HexColor('#E8F0F6')),
         ('TEXTCOLOR', (0, 1), (-1, 1), colors.HexColor('#2B5173')),
-        
-        # Sərhədlər - qalin xətlər
         ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor('#2B5173')),
         ('LINEABOVE', (0, 0), (-1, 0), 2, colors.HexColor('#2B5173')),
         ('LINELEFT', (0, 0), (0, -1), 1.5, colors.HexColor('#2B5173')),
         ('LINERIGHT', (-1, 0), (-1, -1), 1.5, colors.HexColor('#2B5173')),
         ('LINEBELOW', (0, -1), (-1, -1), 1.5, colors.HexColor('#2B5173')),
-        
-        # Daxili xətlər
         ('LINEBETWEEN', (0, 0), (-1, -1), 1, colors.HexColor('#B8D1E8')),
-        
-        # Padding və hizalama
         ('PADDING', (0, 0), (-1, 0), 12),
         ('PADDING', (0, 1), (-1, 1), 15),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -243,7 +237,7 @@ def generate_sifaris_pdf(sifaris_id):
     
     elements.append(info_table)
     
-    # Qeyd bölməsi
+    # Notes section
     if sifaris.qeyd:
         elements.append(Spacer(1, 10))
         noteStyle = ParagraphStyle(
@@ -268,18 +262,9 @@ def generate_sifaris_pdf(sifaris_id):
     
     elements.append(Spacer(1, 15))
 
-    # Məhsullar cədvəli - başlıqları mərkəzləşdirmək üçün Paragraph istifadə edirik
-    headerStyle = ParagraphStyle(
-        'HeaderStyle',
-        parent=styles['Normal'],
-        fontName='NotoSans',
-        fontSize=9,
-        textColor=colors.whitesmoke,
-        alignment=1,  # Mərkəz
-        spaceAfter=0,
-        spaceBefore=0,
-        leading=10
-    )
+    # Products table header
+    headerStyle = _get_style('header')
+    contentStyle = _get_style('content')
 
     headers = [
         Paragraph('№', headerStyle),
@@ -292,28 +277,16 @@ def generate_sifaris_pdf(sifaris_id):
         Paragraph('Cəmi', headerStyle)
     ]
 
-    # Məhsullar cədvəli
+    # Build products data
     data = [headers]
     total_amount = 0
     
-    # Məhsul məlumatları üçün stil
-    contentStyle = ParagraphStyle(
-        'ContentStyle',
-        parent=styles['Normal'],
-        fontName='NotoSans',
-        fontSize=8,
-        alignment=1,  # Mərkəz
-        spaceAfter=0,
-        spaceBefore=0,
-        leading=10
-    )
-
     for index, item in enumerate(sifaris_items, 1):
         row = [
             Paragraph(str(index), contentStyle),
-            Paragraph(item.mehsul.brend_kod, contentStyle),
-            Paragraph(item.mehsul.firma.adi, contentStyle),
-            Paragraph(item.mehsul.adi, contentStyle),
+            Paragraph(item.mehsul.brend_kod or '', contentStyle),
+            Paragraph(item.mehsul.firma.adi if item.mehsul.firma else '', contentStyle),
+            Paragraph(item.mehsul.adi or '', contentStyle),
             Paragraph(str(item.mehsul.vitrin.nomre) if item.mehsul.vitrin else '-', contentStyle),
             Paragraph(str(item.miqdar), contentStyle),
             Paragraph(f"{item.qiymet} ₼", contentStyle),
@@ -322,30 +295,22 @@ def generate_sifaris_pdf(sifaris_id):
         data.append(row)
         total_amount += item.umumi_mebleg
 
-    # Cədvəl stilləri
     table = Table(data)
     table.setStyle(TableStyle([
-        # Başlıq sətri
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),  # Tünd mavi
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2B5173')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
         ('FONTNAME', (0, 0), (-1, 0), 'NotoSans'),
         ('FONTSIZE', (0, 0), (-1, 0), 9),
         ('TOPPADDING', (0, 0), (-1, 0), 5),
         ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
-        
-        # Məhsul sətirləri - alternativ rənglər
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTNAME', (0, 1), (-1, -1), 'NotoSans'),
         ('FONTSIZE', (0, 1), (-1, -1), 8),
         ('TOPPADDING', (0, 1), (-1, -1), 3),
         ('BOTTOMPADDING', (0, 1), (-1, -1), 3),
-        
-        # Cədvəl xətləri
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#CCCCCC')),
         ('LINEBELOW', (0, 0), (-1, 0), 1.5, colors.HexColor('#2B5173')),
-        
-        # Sütun enləri
         ('COLWIDTHS', (0, 0), (-1, -1), '*'),
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
@@ -354,14 +319,14 @@ def generate_sifaris_pdf(sifaris_id):
     elements.append(table)
     elements.append(Spacer(1, 15))
 
-    # Ümumi məbləğ və Qalıq borc cədvəli
+    # Totals
     totalStyle = ParagraphStyle(
         'TotalStyle',
         parent=styles['Normal'],
         fontName='NotoSans',
         fontSize=10,
         fontBold=True,
-        alignment=0,  # Sol tərəf
+        alignment=0,
         spaceAfter=0,
         spaceBefore=0,
         leading=12
@@ -373,7 +338,7 @@ def generate_sifaris_pdf(sifaris_id):
         fontName='NotoSans',
         fontSize=10,
         fontBold=True,
-        alignment=2,  # Sağ tərəf
+        alignment=2,
         spaceAfter=0,
         spaceBefore=0,
         leading=12,
@@ -395,7 +360,6 @@ def generate_sifaris_pdf(sifaris_id):
         ('BACKGROUND', (1, 0), (1, -1), colors.HexColor('#F0F4F8')),
     ]))
 
-    # Cədvəli sağa tərəfə yerləşdirmək üçün
     align_table = Table([[total_table]], colWidths=[525])
     align_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
@@ -404,7 +368,7 @@ def generate_sifaris_pdf(sifaris_id):
     elements.append(align_table)
     elements.append(Spacer(1, 30))
 
-    # İmzalar bölməsi
+    # Signatures
     signature_data = [[
         Paragraph("Təhvil Verdi: _________________", styles['Normal']),
         Paragraph(f"Təhvil Aldı: {sifaris.istifadeci.username} _________________", styles['Normal'])
@@ -416,7 +380,6 @@ def generate_sifaris_pdf(sifaris_id):
     ]))
     elements.append(signature_table)
 
-    # PDF-i yarat
     doc.build(elements)
     pdf = buffer.getvalue()
     buffer.close()

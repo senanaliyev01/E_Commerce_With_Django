@@ -458,6 +458,7 @@ def search_suggestions(request):
             suggestions.append({
                 'id': mehsul.id,
                 'adi': mehsul.adi,
+                'firma': mehsul.firma.adi,
                 'brend_kod': mehsul.brend_kod,
                 'oem': mehsul.oem,
                 'olcu': mehsul.olcu,

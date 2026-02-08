@@ -119,7 +119,7 @@ function initializeSearch() {
                                             <div class="search-result-title">${item.adi}</div>
                                             <div class="search-result-details">
                                                 Brend Kodu: ${item.brend_kod}<br>
-                                                OEM: ${item.oem}<br>
+                                                Firma: ${item.firma}<br>
                                                 ${item.olcu ? `Ölçü: ${item.olcu}` : ''}
                                             </div>
                                         </div>
