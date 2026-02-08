@@ -20,26 +20,31 @@ from .import_excel import (
 class Header_MessageAdmin(admin.ModelAdmin):
     list_display = ['mesaj']
     search_fields = ['mesaj']
+    list_per_page = 20
 
 @admin.register(Kateqoriya)
 class KateqoriyaAdmin(admin.ModelAdmin):
     list_display = ['adi']
     search_fields = ['adi']
+    list_per_page = 20
 
 @admin.register(Vitrin)
 class VitrinAdmin(admin.ModelAdmin):
     list_display = ['nomre']
     search_fields = ['nomre']
+    list_per_page = 20
 
 @admin.register(Firma)
 class FirmaAdmin(admin.ModelAdmin):
     list_display = ['adi']
     search_fields = ['adi']
+    list_per_page = 20
 
 @admin.register(Avtomobil)
 class AvtomobilAdmin(admin.ModelAdmin):
     list_display = ['adi']
     search_fields = ['adi']
+    list_per_page = 20
 
 @admin.register(Mehsul)
 class MehsulAdmin(admin.ModelAdmin):
@@ -48,6 +53,7 @@ class MehsulAdmin(admin.ModelAdmin):
     search_fields = ['adi', 'brend_kod', 'oem', 'kodlar', 'olcu']
     change_list_template = 'admin/mehsul_change_list.html'
     actions = ['mark_as_new', 'remove_from_new']
+    list_per_page = 20
 
     def get_search_results(self, request, queryset, search_term):
         """Views.py-dəki xüsusi axtarış funksiyasını admin panelində istifadə et"""
@@ -238,6 +244,7 @@ class SifarisAdmin(admin.ModelAdmin):
     fields = ['istifadeci', 'tarix', 'status', 'catdirilma_usulu', 'umumi_mebleg', 'odenilen_mebleg', 'qaliq_borc', 'qeyd']
     inlines = [SifarisItemInline]
     change_list_template = 'admin/sifaris_change_list.html'
+    list_per_page = 20
 
     def qeyd_display(self, obj):
         """Qeydi maksimum 51 karakterə kəs və uzun olsa ... əlavə et"""
@@ -314,6 +321,7 @@ class PopupImageAdmin(admin.ModelAdmin):
     list_display = ['id', 'basliq', 'aktiv', 'sira', 'yaradilma_tarixi', 'sekil_preview']
     list_editable = ['aktiv', 'sira']
     ordering = ['sira', '-yaradilma_tarixi']
+    list_per_page = 20
     
     def sekil_preview(self, obj):
         if obj.sekil:
@@ -327,6 +335,7 @@ class ProfileAdmin(admin.ModelAdmin):
     list_filter = ['is_verified']
     search_fields = ['user__username', 'phone', 'address']
     actions = ['verify_profiles', 'unverify_profiles']
+    list_per_page = 20
 
     def verification_button(self, obj):
         if obj.is_verified:
