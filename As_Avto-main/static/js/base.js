@@ -113,15 +113,17 @@ function initializeSearch() {
                                 data.suggestions.forEach(item => {
                                     const div = document.createElement('div');
                                     div.className = 'search-result-item';
+                                    const detailsText = [
+                                        `Brend: ${item.brend_kod}`,
+                                        item.firma,
+                                        item.olcu ? `Ölçü: ${item.olcu}` : ''
+                                    ].filter(Boolean).join(' • ');
+                                    
                                     div.innerHTML = `
                                         <img src="${item.sekil_url || '/static/images/no_image.jpg'}" alt="${item.adi}" class="search-result-image">
                                         <div class="search-result-info">
                                             <div class="search-result-title">${item.adi}</div>
-                                            <div class="search-result-details">
-                                                Brend Kodu: ${item.brend_kod}<br>
-                                                Firma: ${item.firma}<br>
-                                                ${item.olcu ? `Ölçü: ${item.olcu}` : ''}
-                                            </div>
+                                            <div class="search-result-details">${detailsText}</div>
                                         </div>
                                         <div class="search-result-price">${item.qiymet} ₼</div>
                                     `;
