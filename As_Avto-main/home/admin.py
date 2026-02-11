@@ -4,10 +4,11 @@ from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import path
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.conf import settings
 import os
+import json
 from .export_pdf import generate_products_pdf, generate_sifaris_pdf
 from .import_excel import (
     handle_import_excel_view, 
@@ -99,7 +100,12 @@ class MehsulAdmin(admin.ModelAdmin):
 
     def export_pdf(self, request):
         """Bütün məhsulların PDF-sini yükləmə"""
-        return generate_products_pdf()
+        # Store progress in session
+        def progress_callback(progress):
+            request.session[f'pdf_progress'] = progress
+            request.session.modified = True
+        
+        return generate_products_pdf(progress_callback=progress_callback)
 
     def mark_as_new(self, request, queryset):
         updated = queryset.update(yenidir=True)
@@ -275,7 +281,11 @@ class SifarisAdmin(admin.ModelAdmin):
 
     def export_pdf(self, request, sifaris_id):
         """Sifariş PDF-sini yükləmə"""
-        return generate_sifaris_pdf(sifaris_id)
+        def progress_callback(progress):
+            request.session[f'pdf_sifaris_progress_{sifaris_id}'] = progress
+            request.session.modified = True
+        
+        return generate_sifaris_pdf(sifaris_id, progress_callback=progress_callback)
 
     def has_add_permission(self, request):
         return False  # Sifarişlər yalnız saytdan əlavə edilə bilər

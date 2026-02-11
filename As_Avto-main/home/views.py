@@ -730,7 +730,11 @@ def download_sifaris_pdf(request, sifaris_id):
     """Sifaris PDF-sini AJAX ilə yükləmə"""
     from .export_pdf import generate_sifaris_pdf
     try:
-        return generate_sifaris_pdf(sifaris_id)
+        def progress_callback(progress):
+            request.session[f'pdf_sifaris_progress_{sifaris_id}'] = progress
+            request.session.modified = True
+        
+        return generate_sifaris_pdf(sifaris_id, progress_callback=progress_callback)
     except Sifaris.DoesNotExist:
         return JsonResponse({'error': 'Sifaris tapılmadı'}, status=404)
     except Exception as e:
@@ -742,6 +746,24 @@ def download_products_pdf(request):
     """Bütün məhsulların PDF-sini AJAX ilə yükləmə"""
     from .export_pdf import generate_products_pdf
     try:
-        return generate_products_pdf()
+        def progress_callback(progress):
+            request.session[f'pdf_progress'] = progress
+            request.session.modified = True
+        
+        return generate_products_pdf(progress_callback=progress_callback)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def pdf_progress_sifaris(request, sifaris_id):
+    """Sifaris PDF hazırlama progress-i"""
+    progress = request.session.get(f'pdf_sifaris_progress_{sifaris_id}', 0)
+    return JsonResponse({'progress': progress})
+
+
+@require_http_methods(["GET"])
+def pdf_progress_products(request):
+    """Məhsullar PDF hazırlama progress-i"""
+    progress = request.session.get(f'pdf_progress', 0)
+    return JsonResponse({'progress': progress})

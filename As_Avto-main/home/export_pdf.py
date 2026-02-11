@@ -5,10 +5,11 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 import io
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.utils import timezone
 from django.db.models import Prefetch
 from .models import Mehsul, Sifaris
+import json
 
 # Module-level font registration (one-time only)
 try:
@@ -50,7 +51,7 @@ def _get_style(name, **kwargs):
     return _styles_cache[cache_key]
 
 
-def generate_products_pdf():
+def generate_products_pdf(progress_callback=None):
     """Bütün məhsulların PDF-sini yaratmaq"""
     
     response = HttpResponse(content_type='application/pdf')
@@ -71,6 +72,10 @@ def generate_products_pdf():
 
     # Fetch all data at once with select_related for optimization
     mehsullar = Mehsul.objects.select_related('firma', 'vitrin').all()
+    total_products = mehsullar.count()
+    
+    if progress_callback:
+        progress_callback(10)
     
     # Build table data efficiently
     headers = [
@@ -95,6 +100,11 @@ def generate_products_pdf():
             Paragraph(f"{mehsul.qiymet} ₼", contentStyle)
         ]
         data.append(row)
+        
+        # Call progress callback
+        if progress_callback and total_products > 0:
+            progress = int(10 + (index / total_products) * 70)
+            progress_callback(progress)
 
     table = Table(data)
     table.setStyle(TableStyle([
@@ -118,22 +128,38 @@ def generate_products_pdf():
     ]))
     
     elements.append(table)
+    
+    if progress_callback:
+        progress_callback(85)
+    
     doc.build(elements)
+    
+    if progress_callback:
+        progress_callback(95)
     
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
 
+    if progress_callback:
+        progress_callback(100)
+
     return response
 
 
-def generate_sifaris_pdf(sifaris_id):
+def generate_sifaris_pdf(sifaris_id, progress_callback=None):
     """Sifariş PDF-sini yaratmaq"""
+    
+    if progress_callback:
+        progress_callback(5)
     
     # Optimized query with prefetch_related
     sifaris = Sifaris.objects.select_related('istifadeci').prefetch_related('sifarisitem_set__mehsul__firma', 'sifarisitem_set__mehsul__vitrin').get(id=sifaris_id)
     sifaris_items = sifaris.sifarisitem_set.all()
     statistics = Sifaris.get_order_statistics(sifaris.istifadeci)
+
+    if progress_callback:
+        progress_callback(15)
 
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="sifaris_{sifaris_id}.pdf"'
@@ -280,6 +306,7 @@ def generate_sifaris_pdf(sifaris_id):
     # Build products data
     data = [headers]
     total_amount = 0
+    items_count = len(list(sifaris_items))
     
     for index, item in enumerate(sifaris_items, 1):
         row = [
@@ -294,6 +321,11 @@ def generate_sifaris_pdf(sifaris_id):
         ]
         data.append(row)
         total_amount += item.umumi_mebleg
+        
+        # Progress callback
+        if progress_callback and items_count > 0:
+            progress = int(20 + (index / items_count) * 50)
+            progress_callback(progress)
 
     table = Table(data)
     table.setStyle(TableStyle([
@@ -380,9 +412,19 @@ def generate_sifaris_pdf(sifaris_id):
     ]))
     elements.append(signature_table)
 
+    if progress_callback:
+        progress_callback(80)
+
     doc.build(elements)
+    
+    if progress_callback:
+        progress_callback(90)
+    
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+
+    if progress_callback:
+        progress_callback(100)
 
     return response

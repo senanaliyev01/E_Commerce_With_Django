@@ -221,7 +221,12 @@ function initializePdfButtons() {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const sifarisId = this.getAttribute('data-sifaris-id');
-            downloadPdfAjax(`/api/download-sifaris-pdf/${sifarisId}/`, `sifaris-${sifarisId}.pdf`, this);
+            downloadPdfAjax(
+                `/admin/home/sifaris/export-pdf/${sifarisId}/`, 
+                `sifaris-${sifarisId}.pdf`, 
+                this,
+                `/api/progress-sifaris-pdf/${sifarisId}/`
+            );
         });
     });
     
@@ -230,18 +235,111 @@ function initializePdfButtons() {
     if (productsButton) {
         productsButton.addEventListener('click', function(e) {
             e.preventDefault();
-            downloadPdfAjax('/api/download-products-pdf/', 'mehsullar.pdf', this);
+            downloadPdfAjax(
+                '/admin/home/mehsul/export-pdf/', 
+                'mehsullar.pdf', 
+                this,
+                '/api/progress-products-pdf/'
+            );
         });
     }
 }
 
-function downloadPdfAjax(url, filename, button) {
+function downloadPdfAjax(url, filename, button, progressUrl) {
     const originalText = button.textContent;
     
     // Düymə statusu dəyişdir
     button.disabled = true;
-    button.textContent = '⏳ Yüklənir...';
     button.style.opacity = '0.6';
+    
+    // Progress bar container
+    const progressContainer = document.createElement('div');
+    progressContainer.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10001;
+        text-align: center;
+        min-width: 300px;
+    `;
+    
+    const progressTitle = document.createElement('h3');
+    progressTitle.textContent = 'PDF Hazırlanır...';
+    progressTitle.style.cssText = 'margin: 0 0 15px 0; color: #2B5173; font-size: 16px;';
+    progressContainer.appendChild(progressTitle);
+    
+    const progressBar = document.createElement('div');
+    progressBar.style.cssText = `
+        width: 100%;
+        height: 8px;
+        background: #E8E8E8;
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 10px;
+    `;
+    
+    const progressFill = document.createElement('div');
+    progressFill.style.cssText = `
+        height: 100%;
+        background: linear-gradient(90deg, #417690, #2B5173);
+        width: 0%;
+        transition: width 0.3s ease;
+        border-radius: 4px;
+    `;
+    progressBar.appendChild(progressFill);
+    progressContainer.appendChild(progressBar);
+    
+    const progressText = document.createElement('p');
+    progressText.textContent = '0%';
+    progressText.style.cssText = 'margin: 0; color: #666; font-size: 14px; font-weight: bold;';
+    progressContainer.appendChild(progressText);
+    
+    // Backdrop
+    const backdrop = document.createElement('div');
+    backdrop.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.3);
+        z-index: 10000;
+    `;
+    
+    document.body.appendChild(backdrop);
+    document.body.appendChild(progressContainer);
+    
+    // Progress polling
+    let progressInterval = null;
+    let lastProgress = 0;
+    
+    const pollProgress = () => {
+        fetch(progressUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.progress) {
+                lastProgress = Math.max(lastProgress, data.progress);
+                progressFill.style.width = lastProgress + '%';
+                progressText.textContent = lastProgress + '%';
+            }
+        })
+        .catch(() => {
+            // Continue polling even if error
+        });
+    };
+    
+    // Start polling
+    progressInterval = setInterval(pollProgress, 200);
     
     // AJAX sorğusu
     fetch(url, {
@@ -251,6 +349,7 @@ function downloadPdfAjax(url, filename, button) {
         }
     })
     .then(response => {
+        clearInterval(progressInterval);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -267,16 +366,29 @@ function downloadPdfAjax(url, filename, button) {
         window.URL.revokeObjectURL(blobUrl);
         document.body.removeChild(link);
         
-        // Uğur mesajı göstər
-        showNotification('PDF uğurla yükləndi!', 'success');
+        // Progress-i 100%-ə çox
+        progressFill.style.width = '100%';
+        progressText.textContent = '100%';
         
-        // Düymə statusu bərpa et
-        button.disabled = false;
-        button.textContent = originalText;
-        button.style.opacity = '1';
+        // 500ms sonra modal bağla
+        setTimeout(() => {
+            backdrop.remove();
+            progressContainer.remove();
+            
+            // Uğur mesajı göstər
+            showNotification('PDF uğurla yükləndi!', 'success');
+            
+            // Düymə statusu bərpa et
+            button.disabled = false;
+            button.textContent = originalText;
+            button.style.opacity = '1';
+        }, 500);
     })
     .catch(error => {
+        clearInterval(progressInterval);
         console.error('PDF yüklənərkən xəta:', error);
+        backdrop.remove();
+        progressContainer.remove();
         showNotification(`Xəta: ${error.message}`, 'error');
         
         // Düymə statusu bərpa et
