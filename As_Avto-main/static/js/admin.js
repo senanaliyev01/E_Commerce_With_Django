@@ -375,9 +375,6 @@ function downloadPdfAjax(url, filename, button, progressUrl) {
             backdrop.remove();
             progressContainer.remove();
             
-            // Uğur mesajı göstər
-            showNotification('PDF uğurla yükləndi!', 'success');
-            
             // Düymə statusu bərpa et
             button.disabled = false;
             button.textContent = originalText;
