@@ -487,3 +487,326 @@ style.textContent = `
 if (document.head) {
     document.head.appendChild(style);
 }
+
+/* JS moved from templates/admin/mehsul_change_list.html */
+// Excel import modal controls and batch import logic
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('excelImportModal');
+    const showBtn = document.getElementById('showExcelImportModal');
+    const closeBtns = document.querySelectorAll('.close, .closeBtn');
+    const form = document.querySelector('#excelImportModal form');
+    const importBtn = document.getElementById('importBtn');
+    const progressDiv = document.getElementById('importProgress');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const statusText = document.getElementById('statusText');
+    const errorSummary = document.getElementById('errorSummary');
+    const errorList = document.getElementById('errorList');
+    const errorDetailsModal = document.getElementById('errorDetailsModal');
+    const errorDetailsContent = document.getElementById('errorDetailsContent');
+
+    // Show modal
+    if (showBtn) {
+        showBtn.onclick = function() {
+            modal.style.display = 'block';
+        }
+    }
+
+    // Close modal
+    closeBtns.forEach(btn => {
+        btn.onclick = function() {
+            modal.style.display = 'none';
+            resetProgress();
+        }
+    });
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+            resetProgress();
+        }
+        if (event.target == errorDetailsModal) {
+            errorDetailsModal.style.display = 'none';
+        }
+    }
+
+    // Handle form submission
+    if (form) {
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            performBatchImport();
+        }
+    }
+
+    function resetProgress() {
+        if (!progressDiv) return;
+        progressDiv.style.display = 'none';
+        progressBar.style.width = '0%';
+        progressText.textContent = '0%';
+        statusText.textContent = '';
+        errorSummary.style.display = 'none';
+        errorList.innerHTML = '';
+        importBtn.disabled = false;
+        importBtn.textContent = 'İdxal Et';
+    }
+
+    function updateProgress(processed, total, newCount, updateCount, errorCount) {
+        const percentage = Math.round((processed / total) * 100);
+        progressBar.style.width = percentage + '%';
+        progressText.textContent = percentage + '%';
+        statusText.textContent = `${processed}/${total} sətir emal edildi. Yeni: ${newCount}, Yeniləndi: ${updateCount}, Xəta: ${errorCount}`;
+    }
+
+    async function performBatchImport() {
+        const fileInput = form.querySelector('input[type="file"]');
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        importBtn.disabled = true;
+        importBtn.textContent = 'İdxal edilir...';
+        progressDiv.style.display = 'block';
+        statusText.textContent = 'Excel faylı oxunur...';
+        errorSummary.style.display = 'none';
+        errorList.innerHTML = '';
+
+        try {
+            // Step 1: Initialize import
+            const formData = new FormData();
+            formData.append('excel_file', file);
+            formData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+            const initResponse = await fetch('import-excel-init/', {
+                method: 'POST',
+                body: formData
+            });
+
+            const initResult = await initResponse.json();
+            if (initResult.status !== 'ok') {
+                throw new Error(initResult.message);
+            }
+
+            const jobId = initResult.job_id;
+            const totalRows = initResult.total_rows;
+
+            // Step 2: Process in batches
+            const batchSize = 50;
+            let processed = 0;
+            let newCount = 0;
+            let updateCount = 0;
+            let errorCount = 0;
+            let allErrors = [];
+
+            while (processed < totalRows) {
+                const batchFormData = new FormData();
+                batchFormData.append('job_id', jobId);
+                batchFormData.append('start', processed);
+                batchFormData.append('size', batchSize);
+                batchFormData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+                const batchResponse = await fetch('import-excel-batch/', {
+                    method: 'POST',
+                    body: batchFormData
+                });
+
+                const batchResult = await batchResponse.json();
+                if (batchResult.status !== 'ok') {
+                    throw new Error(batchResult.message);
+                }
+
+                processed = parseInt(batchResult.processed_rows, 10) || 0;
+                newCount = parseInt(batchResult.new_count, 10) || 0;
+                updateCount = parseInt(batchResult.update_count, 10) || 0;
+                errorCount = parseInt(batchResult.error_count, 10) || 0;
+
+                // Collect errors from batch
+                if (batchResult.errors && batchResult.errors.length > 0) {
+                    allErrors = allErrors.concat(batchResult.errors);
+                }
+
+                updateProgress(processed, totalRows, newCount, updateCount, errorCount);
+
+                // Small delay to allow UI to update
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+
+            // Step 3: Finalize (delete products not in Excel)
+            statusText.textContent = 'Excel-də olmayan məhsullar silinir...';
+
+            const finalizeFormData = new FormData();
+            finalizeFormData.append('job_id', jobId);
+            finalizeFormData.append('csrfmiddlewaretoken', form.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+            const finalizeResponse = await fetch('import-excel-finalize/', {
+                method: 'POST',
+                body: finalizeFormData
+            });
+
+            const finalizeResult = await finalizeResponse.json();
+            if (finalizeResult.status !== 'ok') {
+                throw new Error(finalizeResult.message);
+            }
+
+            const deletedCount = parseInt(finalizeResult.deleted_count, 10) || 0;
+
+            // Show final results
+            progressBar.style.width = '100%';
+            progressText.textContent = '100%';
+            statusText.textContent = `Tamamlandı! Yeni: ${newCount}, Yeniləndi: ${updateCount}, Silindi: ${deletedCount}, Xəta: ${errorCount}`;
+
+            // Show error summary if there are errors
+            if (allErrors.length > 0) {
+                showErrorSummary(allErrors);
+            }
+
+        } catch (error) {
+            console.error('Import error:', error);
+            statusText.textContent = 'Xəta: ' + error.message;
+            resetProgress();
+        }
+    }
+
+    function showErrorSummary(errors) {
+        errorSummary.style.display = 'block';
+
+        // Group errors by line number
+        const errorsByLine = {};
+        errors.forEach(error => {
+            const line = error.line || 'Bilinməyən';
+            if (!errorsByLine[line]) {
+                errorsByLine[line] = [];
+            }
+            errorsByLine[line].push(error);
+        });
+
+        // Create error list with clickable items
+        const errorListHTML = Object.keys(errorsByLine).map(line => {
+            const lineErrors = errorsByLine[line];
+            const errorCount = lineErrors.length;
+            return `
+                <div class="error-line-item" data-line="${line}" style="cursor: pointer; padding: 5px; margin: 2px 0; background-color: #fff; border: 1px solid #ddd; border-radius: 3px;">
+                    <strong>Sətir ${line}:</strong> ${errorCount} xəta
+                    <span style="float: right; color: #007bff;">Detallar →</span>
+                </div>
+            `;
+        }).join('');
+
+        errorList.innerHTML = errorListHTML;
+
+        // Add click handlers to error items
+        document.querySelectorAll('.error-line-item').forEach(item => {
+            item.onclick = function() {
+                const line = this.getAttribute('data-line');
+                const lineErrors = errorsByLine[line];
+                showErrorDetails(line, lineErrors);
+            };
+        });
+    }
+
+    function showErrorDetails(line, errors) {
+        errorDetailsModal.style.display = 'block';
+
+        const errorDetailsHTML = `
+            <h4>Sətir ${line} - Xəta Detalları:</h4>
+            ${errors.map(error => `
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
+                    <strong>Xəta:</strong> ${error.message || 'Bilinməyən xəta'}<br>
+                    ${error.field ? `<strong>Sahə:</strong> ${error.field}<br>` : ''}
+                    ${error.row ? `<strong>Sətir məlumatları:</strong><br>
+                        <div style="margin-top: 5px; font-family: monospace; font-size: 12px; background-color: #fff; padding: 5px; border-radius: 3px;">
+                            ${Object.entries(error.row).map(([key, value]) => `${key}: ${value}`).join('<br>')}
+                        </div>` : ''}
+                </div>
+            `).join('')}
+        `;
+
+        errorDetailsContent.innerHTML = errorDetailsHTML;
+    }
+
+    // Close error details modal
+    const errorDetailsClose = document.querySelector('#errorDetailsModal .close');
+    if (errorDetailsClose) {
+        errorDetailsClose.onclick = function() {
+            errorDetailsModal.style.display = 'none';
+        }
+    }
+});
+
+// Image Change Functionality (delegated click handler)
+function changeProductImage(productId) {
+    const fileInput = document.getElementById('imageFileInput');
+    fileInput.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate image file
+            if (!file.type.startsWith('image/')) {
+                alert('Yalnız şəkil faylları qəbul edilir.');
+                return;
+            }
+
+            // Create FormData and send request
+            const formData = new FormData();
+            formData.append('product_id', productId);
+            formData.append('image', file);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name="csrfmiddlewaretoken"]').value);
+
+            // Show loading state on button
+            const button = document.querySelector(`button[data-product-id="${productId}"]`);
+            const originalText = button.textContent;
+            button.textContent = 'Yenilənir...';
+            button.disabled = true;
+
+            fetch('change-image/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update the image in the admin list using the specific ID
+                    const imageCell = document.getElementById(`product-image-${productId}`);
+                    if (imageCell) {
+                        imageCell.src = data.new_image_url;
+                        imageCell.style.width = '50px';
+                        imageCell.style.height = '50px';
+                        imageCell.style.objectFit = 'cover';
+                        imageCell.style.borderRadius = '4px';
+                    }
+
+                    // Update button text
+                    button.textContent = 'Şəkil Dəyişildi!';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.disabled = false;
+                    }, 2000);
+                } else {
+                    alert('Xəta: ' + data.message);
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+                button.textContent = originalText;
+                button.disabled = false;
+            });
+        }
+
+        // Reset file input
+        fileInput.value = '';
+    };
+
+    // Trigger file selection
+    fileInput.click();
+}
+
+// Delegated listener for change-image buttons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('change-image-btn')) {
+        const productId = e.target.getAttribute('data-product-id');
+        changeProductImage(productId);
+    }
+});
+
+/* End moved JS */

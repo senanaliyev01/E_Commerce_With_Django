@@ -174,7 +174,10 @@ def handle_import_excel_view(request, admin_instance):
                             to_delete_ids.append(p.id)
                     
                     if to_delete_ids:
-                        deleted_count, _ = Mehsul.objects.filter(id__in=to_delete_ids).delete()
+                        # delete() returns total deleted rows including cascaded related objects.
+                        # We want to report number of Mehsul records deleted, so count them first.
+                        deleted_count = Mehsul.objects.filter(id__in=to_delete_ids).count()
+                        Mehsul.objects.filter(id__in=to_delete_ids).delete()
 
                 # Nəticəni göstər
                 success_message = f"Excel faylı uğurla import edildi! "
@@ -495,8 +498,10 @@ def handle_import_excel_finalize(request):
             product_key = (p.brend_kod, p.firma_id)
             if product_key not in excel_keys:
                 to_delete_ids.append(p.id)
-        if to_delete_ids:
-            deleted_count, _ = Mehsul.objects.filter(id__in=to_delete_ids).delete()
+    if to_delete_ids:
+        # Report number of Mehsul records (not cascaded related deletions)
+        deleted_count = Mehsul.objects.filter(id__in=to_delete_ids).count()
+        Mehsul.objects.filter(id__in=to_delete_ids).delete()
 
     # Faylları təmizlə
     try:

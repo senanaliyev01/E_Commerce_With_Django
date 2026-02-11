@@ -343,7 +343,7 @@ def checkout(request):
                 qeyd=qeyd if qeyd else None  # Add note if provided
             )
 
-            # Sifariş elementlərini yaradırıq
+            # Sifariş elementlərini yaradırıq və stoku azaldırıq
             for item in order_items:
                 SifarisItem.objects.create(
                     sifaris=order,
@@ -351,6 +351,11 @@ def checkout(request):
                     miqdar=item['quantity'],
                     qiymet=item['price']
                 )
+                
+                # Məhsulun stokdan azaldırıq
+                product = item['product']
+                product.stok -= item['quantity']
+                product.save()
 
             # Səbəti yeniləyirik (yalnız seçilməmiş məhsulları saxlayırıq)
             request.session['cart'] = remaining_cart
