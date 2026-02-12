@@ -24,6 +24,4 @@ urlpatterns = [
     path('product-details/<int:product_id>/', views.product_details, name='product_details'),
     path('api/download-sifaris-pdf/<int:sifaris_id>/', views.download_sifaris_pdf, name='download_sifaris_pdf'),
     path('api/download-products-pdf/', views.download_products_pdf, name='download_products_pdf'),
-    path('api/progress-sifaris-pdf/<int:sifaris_id>/', views.pdf_progress_sifaris, name='pdf_progress_sifaris'),
-    path('api/progress-products-pdf/', views.pdf_progress_products, name='pdf_progress_products'),
 ]

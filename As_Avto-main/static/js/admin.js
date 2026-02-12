@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializePdfButtons() {
-    // Sifaris PDF düymələri
+    // Sifaris HTML düymələri
     const sifarisButtons = document.querySelectorAll('.pdf-download-btn[data-sifaris-id]');
     sifarisButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -223,125 +223,35 @@ function initializePdfButtons() {
             const sifarisId = this.getAttribute('data-sifaris-id');
             downloadPdfAjax(
                 `/admin/home/sifaris/export-pdf/${sifarisId}/`, 
-                `sifaris-${sifarisId}.pdf`, 
-                this,
-                `/api/progress-sifaris-pdf/${sifarisId}/`
+                `sifaris-${sifarisId}.html`, 
+                this
             );
         });
     });
     
-    // Mehsullar PDF düyməsi
+    // Mehsullar HTML düyməsi
     const productsButton = document.getElementById('downloadProductsPdfBtn');
     if (productsButton) {
         productsButton.addEventListener('click', function(e) {
             e.preventDefault();
             downloadPdfAjax(
                 '/admin/home/mehsul/export-pdf/', 
-                'mehsullar.pdf', 
-                this,
-                '/api/progress-products-pdf/'
+                'mehsullar.html', 
+                this
             );
         });
     }
 }
 
-function downloadPdfAjax(url, filename, button, progressUrl) {
+function downloadPdfAjax(url, filename, button) {
     const originalText = button.textContent;
     
     // Düymə statusu dəyişdir
     button.disabled = true;
     button.style.opacity = '0.6';
+    button.textContent = 'Yüklənir...';
     
-    // Progress bar container
-    const progressContainer = document.createElement('div');
-    progressContainer.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10001;
-        text-align: center;
-        min-width: 300px;
-    `;
-    
-    const progressTitle = document.createElement('h3');
-    progressTitle.textContent = 'PDF Hazırlanır...';
-    progressTitle.style.cssText = 'margin: 0 0 15px 0; color: #2B5173; font-size: 16px;';
-    progressContainer.appendChild(progressTitle);
-    
-    const progressBar = document.createElement('div');
-    progressBar.style.cssText = `
-        width: 100%;
-        height: 8px;
-        background: #E8E8E8;
-        border-radius: 4px;
-        overflow: hidden;
-        margin-bottom: 10px;
-    `;
-    
-    const progressFill = document.createElement('div');
-    progressFill.style.cssText = `
-        height: 100%;
-        background: linear-gradient(90deg, #417690, #2B5173);
-        width: 0%;
-        transition: width 0.3s ease;
-        border-radius: 4px;
-    `;
-    progressBar.appendChild(progressFill);
-    progressContainer.appendChild(progressBar);
-    
-    const progressText = document.createElement('p');
-    progressText.textContent = '0%';
-    progressText.style.cssText = 'margin: 0; color: #666; font-size: 14px; font-weight: bold;';
-    progressContainer.appendChild(progressText);
-    
-    // Backdrop
-    const backdrop = document.createElement('div');
-    backdrop.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.3);
-        z-index: 10000;
-    `;
-    
-    document.body.appendChild(backdrop);
-    document.body.appendChild(progressContainer);
-    
-    // Progress polling
-    let progressInterval = null;
-    let lastProgress = 0;
-    
-    const pollProgress = () => {
-        fetch(progressUrl, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.progress) {
-                lastProgress = Math.max(lastProgress, data.progress);
-                progressFill.style.width = lastProgress + '%';
-                progressText.textContent = lastProgress + '%';
-            }
-        })
-        .catch(() => {
-            // Continue polling even if error
-        });
-    };
-    
-    // Start polling
-    progressInterval = setInterval(pollProgress, 200);
-    
-    // AJAX sorğusu
+    // AJAX sorğusu - HTML mətnini al
     fetch(url, {
         method: 'GET',
         headers: {
@@ -349,49 +259,47 @@ function downloadPdfAjax(url, filename, button, progressUrl) {
         }
     })
     .then(response => {
-        clearInterval(progressInterval);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        return response.blob();
+        return response.text();
     })
-    .then(blob => {
-        // Blob-dan URL yaratmaq
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        window.URL.revokeObjectURL(blobUrl);
-        document.body.removeChild(link);
+    .then(htmlContent => {
+        // Gizli iframe yaratmaq
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
         
-        // Progress-i 100%-ə çox
-        progressFill.style.width = '100%';
-        progressText.textContent = '100%';
+        // iframe-ə HTML yazma
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
         
-        // 500ms sonra modal bağla
+        // Print dialog açma
         setTimeout(() => {
-            backdrop.remove();
-            progressContainer.remove();
+            iframe.contentWindow.print();
             
-            // Düymə statusu bərpa et
-            button.disabled = false;
-            button.textContent = originalText;
-            button.style.opacity = '1';
-        }, 500);
+            // Print bittikdən sonra iframe sil
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                
+                // Düymə statusu bərpa et
+                button.disabled = false;
+                button.textContent = originalText;
+                button.style.opacity = '1';
+            }, 500);
+        }, 300);
     })
     .catch(error => {
-        clearInterval(progressInterval);
         console.error('PDF yüklənərkən xəta:', error);
-        backdrop.remove();
-        progressContainer.remove();
-        showNotification(`Xəta: ${error.message}`, 'error');
         
         // Düymə statusu bərpa et
         button.disabled = false;
         button.textContent = originalText;
         button.style.opacity = '1';
+        
+        showNotification(`Xəta: ${error.message}`, 'error');
     });
 }
 

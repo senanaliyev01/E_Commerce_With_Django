@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.conf import settings
 import os
 import json
-from .export_pdf import generate_products_pdf, generate_sifaris_pdf
+from .export_pdf import generate_products_html, generate_sifaris_html
 from .import_excel import (
     handle_import_excel_view, 
     handle_import_excel_init, 
@@ -97,15 +97,9 @@ class MehsulAdmin(admin.ModelAdmin):
             path('change-image/', self.change_image, name='change_image'),
         ]
         return custom_urls + urls
-
     def export_pdf(self, request):
-        """Bütün məhsulların PDF-sini yükləmə"""
-        # Store progress in session
-        def progress_callback(progress):
-            request.session[f'pdf_progress'] = progress
-            request.session.modified = True
-        
-        return generate_products_pdf(progress_callback=progress_callback)
+        """Bütün məhsulların HTML-sini yükləmə"""
+        return generate_products_html()
 
     def mark_as_new(self, request, queryset):
         updated = queryset.update(yenidir=True)
@@ -280,12 +274,8 @@ class SifarisAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def export_pdf(self, request, sifaris_id):
-        """Sifariş PDF-sini yükləmə"""
-        def progress_callback(progress):
-            request.session[f'pdf_sifaris_progress_{sifaris_id}'] = progress
-            request.session.modified = True
-        
-        return generate_sifaris_pdf(sifaris_id, progress_callback=progress_callback)
+        """Sifariş HTML-sini yükləmə"""
+        return generate_sifaris_html(sifaris_id)
 
     def has_add_permission(self, request):
         return False  # Sifarişlər yalnız saytdan əlavə edilə bilər
