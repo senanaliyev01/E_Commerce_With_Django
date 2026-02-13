@@ -93,6 +93,15 @@ function initializeOrdersLoadMore() {
     });
 }
 
+// Note counter updater
+function updateNoteCounter() {
+    const el = document.getElementById('noteText');
+    const counter = document.getElementById('noteCharCount');
+    if (!counter) return;
+    const length = el ? el.value.length : 0;
+    counter.textContent = length;
+}
+
 function initializeSearch() {
     const searchInput = document.getElementById('query');
     const searchResults = document.getElementById('search-results');
@@ -1040,13 +1049,18 @@ function openNoteModal() {
     }
     
     const noteModal = document.getElementById('noteModal');
-    const noteText = document.getElementById('noteText');
-    noteText.value = ''; // Clear previous note
+    const noteTextEl = document.getElementById('noteText');
+    if (noteTextEl) {
+        noteTextEl.value = ''; // Clear previous note
+    }
     
     // Reset delivery method in modal
     const modalDeliveryInputs = document.querySelectorAll('#noteForm input[name="catdirilma_usulu"]');
     modalDeliveryInputs.forEach(input => input.checked = false);
     
+    // Reset and update counter
+    if (typeof updateNoteCounter === 'function') updateNoteCounter();
+
     noteModal.style.display = 'block';
 }
 
@@ -1063,10 +1077,24 @@ function submitNoteAndConfirm() {
         return;
     }
     
-    const noteText = document.getElementById('noteText').value;
+    const rawNote = document.getElementById('noteText') ? document.getElementById('noteText').value : '';
+
+    // Enforce maxlength (textarea has maxlength but double-check)
+    if (rawNote.length > 80) {
+        showMessage('error', 'Qeyd maksimum 80 xarakter ola bilər.');
+        return;
+    }
+
+    // Disallow whitespace-only notes
+    if (rawNote.length > 0 && rawNote.trim().length === 0) {
+        showMessage('error', 'Qeyd yalnız boşluqdan ibarət ola bilməz.');
+        return;
+    }
+
+    const noteText = rawNote.trim();
     const hiddenNote = document.getElementById('hidden-note');
     const hiddenDelivery = document.getElementById('hidden-delivery');
-    
+
     hiddenNote.value = noteText;
     hiddenDelivery.value = modalDeliveryMethod.value;
     

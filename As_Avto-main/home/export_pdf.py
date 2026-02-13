@@ -50,137 +50,152 @@ def generate_products_html():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Məhsullar Siyahısı</title>
         <style>
+            /* General reset */
             * {{
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
+            /* Body and container - larger readable base font */
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                padding: 20px;
+                padding: 24px;
                 background: white;
                 color: #333;
+                font-size: 13px; /* increased base size */
             }}
-            
+
             .container {{
-                max-width: 1000px;
+                max-width: 1100px;
                 margin: 0 auto;
             }}
-            
+
             .logo-container {{
                 text-align: center;
-                margin-bottom: 15px;
+                margin-bottom: 18px;
                 page-break-after: avoid;
             }}
-            
+
             .logo {{
-                width: 120px;
-                height: 80px;
+                width: 160px;
+                height: 100px;
                 object-fit: contain;
             }}
-            
+
             .header {{
                 text-align: center;
-                margin-bottom: 20px;
-                padding-bottom: 15px;
+                margin-bottom: 18px;
+                padding-bottom: 12px;
                 page-break-after: avoid;
             }}
-            
+
             .header h1 {{
                 color: #2B5173;
-                font-size: 16px;
+                font-size: 20px; /* larger header */
                 margin-bottom: 0;
-                font-weight: 600;
+                font-weight: 700;
             }}
-            
+
             table {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-top: 10px;
+                margin-top: 12px;
                 border: 1px solid #2B5173;
             }}
-            
+
             thead {{
                 background-color: #2B5173;
                 color: whitesmoke;
             }}
-            
+
             th {{
-                padding: 5px 8px;
+                padding: 8px 10px; /* increased padding */
                 text-align: center;
-                font-weight: 600;
-                font-size: 9px;
+                font-weight: 700;
+                font-size: 11px; /* larger headings */
                 border-right: 1px solid #1a3a52;
                 border-bottom: 1px solid #1a3a52;
-                line-height: 10px;
+                line-height: 14px;
             }}
-            
+
             th:last-child {{
                 border-right: none;
             }}
-            
+
             tbody tr {{
-                border-bottom: 1px solid #CCCCCC;
+                border-bottom: 1px solid #DDDDDD;
             }}
-            
+
             tbody tr td {{
-                border-right: 1px solid #CCCCCC;
+                border-right: 1px solid #EEEEEE;
             }}
-            
+
             tbody tr td:last-child {{
                 border-right: none;
             }}
-            
+
             tbody tr:nth-child(even) {{
-                background-color: #f9f9f9;
+                background-color: #fbfbfb;
             }}
-            
+
             tbody tr:last-child {{
                 border-bottom: 1px solid #2B5173;
             }}
-            
+
             td {{
-                padding: 3px 8px;
+                padding: 8px 10px; /* increased padding */
                 text-align: center;
-                font-size: 8px;
-                line-height: 10px;
+                font-size: 11px; /* readable cell text */
+                line-height: 16px;
                 vertical-align: middle;
+                white-space: nowrap; /* prevent other cells from wrapping */
             }}
-            
+
+            /* Product name should be allowed to wrap when long; limit visually to ~18 chars */
+            .product-name {{
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+                max-width: 18ch;
+                text-align: center;
+                padding: 6px 6px; /* match table cell padding to keep borders aligned */
+            }}
+
             .price {{
                 color: #28a745;
-                font-weight: 600;
+                font-weight: 700;
             }}
-            
+
             @media print {{
                 body {{
                     padding: 0;
                     background: white;
                     margin: 0;
+                    font-size: 12px;
                 }}
-                
+
                 .container {{
                     max-width: 100%;
                     margin: 0;
                 }}
-                
+
                 .logo-container {{
                     page-break-after: avoid;
                 }}
-                
+
                 .header {{
                     page-break-after: avoid;
                 }}
-                
+
                 table {{
                     page-break-inside: avoid;
                 }}
-                
+
                 thead {{
                     display: table-header-group;
                 }}
-                
+
                 tbody tr {{
                     page-break-inside: avoid;
                 }}
@@ -218,7 +233,7 @@ def generate_products_html():
                         <td>{row['index']}</td>
                         <td>{row['brend_kod']}</td>
                         <td>{row['firma']}</td>
-                        <td>{row['adi']}</td>
+                        <td class="product-name">{row['adi']}</td>
                         <td>{row['vitrin']}</td>
                         <td>{row['stok']}</td>
                         <td class="price">{row['qiymet']}</td>
@@ -299,7 +314,7 @@ def generate_sifaris_html(sifaris_id):
                 <td>{row['index']}</td>
                 <td>{row['brend_kod']}</td>
                 <td>{row['firma']}</td>
-                <td>{row['adi']}</td>
+                <td class="product-name">{row['adi']}</td>
                 <td>{row['vitrin']}</td>
                 <td>{row['miqdar']}</td>
                 <td>{row['qiymet']}</td>
@@ -324,189 +339,199 @@ def generate_sifaris_html(sifaris_id):
             @page {{
                 margin: 0.5in;
             }}
-            
+
             * {{
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
             }}
-            
+
             body {{
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                padding: 20px;
+                padding: 22px;
                 background: white;
                 color: #333;
+                font-size: 13px;
             }}
-            
+
             .container {{
-                max-width: 600px;
+                max-width: 720px; /* slightly wider for readability */
                 margin: 0 auto;
             }}
-            
+
             .logo-container {{
                 text-align: center;
-                margin-bottom: 15px;
+                margin-bottom: 14px;
             }}
-            
+
             .logo {{
-                width: 120px;
-                height: 80px;
+                width: 150px;
+                height: 90px;
                 object-fit: contain;
             }}
-            
-            .info-table {{
-                width: 100%;
-                border-collapse: collapse;
-                margin-bottom: 15px;
+
+            /* Info row: logo left, customer info right */
+            .info-row {{
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 18px;
+                margin-bottom: 14px;
             }}
-            
-            .info-table td {{
-                padding: 8px;
-                font-size: 7px;
-                text-align: center;
-                line-height: 9px;
+
+            .info-left {{
+                flex: 0 0 auto;
             }}
-            
-            .info-label {{
-                background-color: #2B5173;
-                color: white;
-                font-weight: bold;
-                border: 1px solid #2B5173;
+
+            .info-right {{
+                flex: 1 1 auto;
+                text-align: right;
+                font-size: 11px;
+                line-height: 1.4;
             }}
-            
-            .info-value {{
-                background-color: #E8F0F6;
+
+            .info-right .info-item {{
+                margin-bottom: 6px;
+            }}
+
+            .info-right .label {{
+                font-weight: 700;
                 color: #2B5173;
-                font-weight: bold;
-                border: 1px solid #B8D1E8;
+                margin-left: 6px;
             }}
-            
-            .info-table tr:first-child td {{
-                border-bottom: 2px solid #2B5173;
-            }}
-            
+
             .note-section {{
                 background: #FFFACD;
                 border-left: 4px solid #FFD700;
-                padding: 8px;
-                margin: 15px 0;
+                padding: 10px;
+                margin: 14px 0;
                 border-radius: 3px;
-                font-size: 9px;
+                font-size: 11px;
                 color: #555555;
             }}
-            
+
             table.products {{
                 width: 100%;
                 border-collapse: collapse;
-                margin: 15px 0;
+                margin: 14px 0;
                 border: 1px solid #2B5173;
             }}
-            
+
             table.products thead {{
                 background-color: #2B5173;
                 color: whitesmoke;
             }}
-            
+
             table.products th {{
-                padding: 5px 4px;
+                padding: 8px 6px;
                 text-align: center;
-                font-weight: 600;
-                font-size: 9px;
+                font-weight: 700;
+                font-size: 10px;
                 border-right: 1px solid #1a3a52;
                 border-bottom: 1px solid #1a3a52;
-                line-height: 10px;
+                line-height: 14px;
             }}
-            
+
             table.products th:last-child {{
                 border-right: none;
             }}
-            
+
             table.products tbody tr {{
                 border-bottom: 1px solid #CCCCCC;
             }}
-            
+
             table.products tbody tr td {{
-                border-right: 1px solid #CCCCCC;
+                border-right: 1px solid #EEEEEE;
             }}
-            
+
             table.products tbody tr td:last-child {{
                 border-right: none;
             }}
-            
+
             table.products tbody tr:nth-child(even) {{
-                background-color: white;
+                background-color: #ffffff;
             }}
-            
+
             table.products tbody tr:last-child {{
                 border-bottom: 1px solid #2B5173;
             }}
-            
+
             table.products td {{
-                padding: 3px 4px;
+                padding: 6px 6px;
                 text-align: center;
-                font-size: 8px;
-                line-height: 10px;
+                font-size: 10px;
+                line-height: 14px;
                 vertical-align: middle;
             }}
-            
+
+            /* Product name wrapping and centering inside sifaris table */
+            .product-name {{
+                white-space: normal;
+                overflow-wrap: anywhere;
+                word-break: break-word;
+                max-width: 18ch;
+                text-align: center;
+                padding: 6px 6px; /* match table cell padding to keep borders aligned */
+            }}
+
             .total-cell {{
                 color: #28a745;
-                font-weight: 600;
+                font-weight: 700;
             }}
-            
+
             .totals-section {{
                 display: flex;
                 flex-direction: column;
                 align-items: flex-end;
-                margin-top: 15px;
-                font-size: 10px;
-                gap: 3px;
+                margin-top: 16px;
+                font-size: 12px;
+                gap: 6px;
             }}
-            
+
             .total-row {{
                 display: flex;
                 justify-content: space-between;
-                width: 160px;
-                font-weight: bold;
+                width: 220px;
+                font-weight: 700;
             }}
-            
+
             .total-label {{
                 color: #333;
             }}
-            
+
             .total-value {{
                 color: #2B5173;
                 margin-left: 30px;
             }}
-            
+
             .signature-section {{
                 display: flex;
                 justify-content: space-between;
-                margin-top: 40px;
-                font-size: 9px;
-                line-height: 10px;
+                margin-top: 48px;
+                font-size: 11px;
+                line-height: 14px;
             }}
-            
+
             .signature-item {{
                 text-align: center;
                 flex: 1;
             }}
-            
+
             .signature-line {{
-                margin-top: 30px;
-                padding-top: 3px;
+                margin-top: 36px;
+                padding-top: 6px;
             }}
-            
+
             @media print {{
                 body {{
                     padding: 0;
                     background: white;
                 }}
-                
+
                 .container {{
                     max-width: 100%;
                 }}
-                
+
                 table {{
                     page-break-inside: avoid;
                 }}
@@ -515,26 +540,19 @@ def generate_sifaris_html(sifaris_id):
     </head>
     <body>
         <div class="container">
-            {logo_html}
-            
-            <table class="info-table">
-                <tr>
-                    <td class="info-label">Müştəri</td>
-                    <td class="info-label">Ünvan</td>
-                    <td class="info-label">Telefon</td>
-                    <td class="info-label">Tarix</td>
-                    <td class="info-label">Çatdırılma</td>
-                    <td class="info-label">Sifariş №</td>
-                </tr>
-                <tr>
-                    <td class="info-value">{sifaris.istifadeci.username}</td>
-                    <td class="info-value">{user_address}</td>
-                    <td class="info-value">{user_phone}</td>
-                    <td class="info-value">{az_date}</td>
-                    <td class="info-value">{sifaris.get_catdirilma_usulu_display()}</td>
-                    <td class="info-value">{sifaris_id}</td>
-                </tr>
-            </table>
+            <div class="info-row">
+                <div class="info-left">
+                    {logo_html}
+                </div>
+                <div class="info-right">
+                    <div class="info-item"><span class="label">Müştəri:</span> {sifaris.istifadeci.username}</div>
+                    <div class="info-item"><span class="label">Ünvan:</span> {user_address}</div>
+                    <div class="info-item"><span class="label">Telefon:</span> {user_phone}</div>
+                    <div class="info-item"><span class="label">Tarix:</span> {az_date}</div>
+                    <div class="info-item"><span class="label">Çatdırılma:</span> {sifaris.get_catdirilma_usulu_display()}</div>
+                    <div class="info-item"><span class="label">Sifariş №:</span> {sifaris_id}</div>
+                </div>
+            </div>
             
             {note_section}
             

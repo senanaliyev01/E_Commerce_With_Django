@@ -260,7 +260,7 @@ class SifarisAdmin(admin.ModelAdmin):
     def pdf_button(self, obj):
         return format_html(
             '<button class="pdf-download-btn" data-sifaris-id="{}" style="background-color: #417690; color: white; '
-            'padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px;">📄 PDF</button>',
+            'padding: 5px 10px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px;">📄 Çap Et</button>',
             obj.id
         )
     pdf_button.short_description = 'PDF'

@@ -3090,6 +3090,13 @@ body {
     box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
 }
 
+.note-counter {
+    text-align: right;
+    font-size: 13px;
+    color: #666;
+    margin-top: 6px;
+}
+
 .modal-buttons {
     display: flex;
     gap: 10px;

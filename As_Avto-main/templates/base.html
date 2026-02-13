@@ -294,7 +294,8 @@
                 </div>
                 <div class="note-form-group">
                     <label for="noteText">Qeyd (istəğə bağlı):</label>
-                    <textarea id="noteText" name="qeyd" placeholder="Sifarişiniz ilə bağlı əlavə qeydlərinizi yazın..."></textarea>
+                    <textarea id="noteText" name="qeyd" maxlength="80" placeholder="Sifarişiniz ilə bağlı əlavə qeydlərinizi yazın..." oninput="updateNoteCounter()"></textarea>
+                    <div class="note-counter"><span id="noteCharCount">0</span>/80</div>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn btn-cancel" onclick="closeNoteModal()">Ləğv et</button>
