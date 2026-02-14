@@ -542,6 +542,7 @@ def register_view(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '')
+        confirm_password = request.POST.get('confirm_password', '')
         phone = request.POST.get('phone', '').strip()
         address = request.POST.get('address', '').strip()
         
@@ -560,6 +561,11 @@ def register_view(request):
             messages.error(request, 'Şifrə minimum 8 simvol olmalıdır!')
             return render(request, 'register.html')
             
+        # Şifrə konfirmasiyası yoxlaması
+        if password != confirm_password:
+            messages.error(request, 'Şifrələr eynə deyil!')
+            return render(request, 'register.html')
+            
         # Telefon nömrəsi validasiyası
         if not phone.startswith('+994'):
             messages.error(request, 'Telefon nömrəsi +994 ilə başlamalıdır!')
@@ -568,6 +574,11 @@ def register_view(request):
         # Unvan validasiyası
         if not address:
             messages.error(request, 'Ünvan boş ola bilməz!')
+            return render(request, 'register.html')
+            
+        # Unvan karakter sayı validasiyası
+        if len(address) > 60:
+            messages.error(request, 'Ünvan maksimum 60 simvol ola bilər!')
             return render(request, 'register.html')
             
         # Username mövcudluğu yoxlaması
@@ -591,7 +602,7 @@ def register_view(request):
             user.profile.save()
             
             messages.success(request, 'Qeydiyyat uğurla tamamlandı!')
-            return redirect('register')
+            return redirect('login')
             
         except Exception as e:
             messages.error(request, 'Qeydiyyat zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.')
