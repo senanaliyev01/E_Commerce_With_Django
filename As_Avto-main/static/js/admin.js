@@ -222,7 +222,7 @@ function initializePdfButtons() {
             e.preventDefault();
             const sifarisId = this.getAttribute('data-sifaris-id');
             downloadPdfAjax(
-                `/admin/home/sifaris/export-pdf/${sifarisId}/`, 
+                `/sabuhi085-habil054/home/sifaris/export-pdf/${sifarisId}/`, 
                 `sifaris-${sifarisId}.html`, 
                 this
             );
@@ -235,7 +235,7 @@ function initializePdfButtons() {
         productsButton.addEventListener('click', function(e) {
             e.preventDefault();
             downloadPdfAjax(
-                '/admin/home/mehsul/export-pdf/', 
+                '/sabuhi085-habil054/home/mehsul/export-pdf/', 
                 'mehsullar.html', 
                 this
             );

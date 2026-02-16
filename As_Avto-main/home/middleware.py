@@ -46,7 +46,7 @@ from django.utils.deprecation import MiddlewareMixin
 class AdminFaviconMiddleware(MiddlewareMixin):
     def process_response(self, request, response):
         # yalnız admin HTML response-lara tətbiq et
-        if request.path.startswith('/admin/') and getattr(response, 'get', None):
+        if request.path.startswith('/sabuhi085-habil054/') and getattr(response, 'get', None):
             content_type = response.get('Content-Type', '')
             if 'text/html' in content_type:
                 try:
