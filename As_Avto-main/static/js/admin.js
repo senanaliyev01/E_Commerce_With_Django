@@ -1,7 +1,10 @@
 function toggleStatistics() {
     var container = document.getElementById('statisticsContainer');
     var button = document.querySelector('.show-stats-btn');
-    
+
+    // Safely return if elements are not present on the current page
+    if (!container || !button) return;
+
     if (container.style.display === 'none' || container.style.display === '') {
         container.style.display = 'block';
         button.innerHTML = '<i class="fas fa-times"></i> Statistikanı Gizlət';
@@ -13,23 +16,57 @@ function toggleStatistics() {
 
 let searchTimeout = null;
 
-// Mətni təmizləmək üçün funksiya
-function cleanText(text) {
-    // Yalnız hərflər, rəqəmlər, Azərbaycan hərfləri və "_" simvoluna icazə ver
-    return text.replace(/[^a-zA-Z0-9əƏçÇşŞöÖğĞüÜıİ_]/g, '').toLowerCase();
+// views.py ilə eyni Azərbaycan hərfi normalizə etmə
+function normalizeAzerbaijaniChars(text) {
+    const charMap = {
+        'ə': ['e'], 'e': ['ə'],
+        'ö': ['o'], 'o': ['ö'],
+        'ğ': ['g'], 'g': ['ğ'],
+        'ı': ['i'], 'i': ['ı'],
+        'ü': ['u'], 'u': ['ü'],
+        'ş': ['s'], 's': ['ş'],
+        'ç': ['c'], 'c': ['ç'],
+    };
+
+    const variations = new Set([text.toLowerCase()]);
+    
+    for (const char in charMap) {
+        const replacements = charMap[char];
+        const newVars = [];
+        
+        variations.forEach(v => {
+            if (v.includes(char)) {
+                replacements.forEach(repl => {
+                    newVars.push(v.split(char).join(repl));
+                });
+            }
+        });
+        
+        newVars.forEach(v => variations.add(v));
+    }
+    
+    return Array.from(variations);
 }
 
-// İki mətni müqayisə etmək üçün funksiya
-function compareTexts(text1, text2) {
-    const cleanText1 = cleanText(text1);
-    const cleanText2 = cleanText(text2);
+// Axtarış sözlərini hazırla (views.py ilə uyumlu)
+function getSearchWords(query) {
+    // Boşluqları normallaşdır
+    const processed = query.replace(/\s+/g, ' ').trim();
+    return processed.split(' ').filter(word => word.length > 0);
+}
+
+// İstifadəçi adına mətni bir cümlə ilə yoxla (views.py ilə uyumlu)
+function matchesSearch(userName, searchQuery) {
+    const searchWords = getSearchWords(searchQuery);
     
-    // Tam uyğunluq
-    if (cleanText1 === cleanText2) return 2;
-    // Hissəvi uyğunluq
-    if (cleanText2.includes(cleanText1)) return 1;
-    // Uyğunsuzluq
-    return 0;
+    // Hər sözün ən azı bir varyasiyası istifadəçi adında olmalıdır (AND logic)
+    return searchWords.every(word => {
+        const variations = normalizeAzerbaijaniChars(word);
+        // OR: sözün hər hansı varyasiyası tapılsa kefi
+        return variations.some(variation => 
+            userName.toLowerCase().includes(variation)
+        );
+    });
 }
 
 function filterUsers() {
@@ -37,20 +74,23 @@ function filterUsers() {
     
     searchTimeout = setTimeout(() => {
         const input = document.getElementById('userSearch');
+        if (!input) return; // no search input on this page
+
         const searchText = input.value;
-        const cleanSearchText = cleanText(searchText);
         const table = document.querySelector('.stats-table');
-        const tr = table.getElementsByTagName('tr');
         const clearButton = document.querySelector('.clear-search');
         const noResults = document.querySelector('.no-results');
+
+        if (!table || !clearButton || !noResults) return; // required elements missing
+        const tr = table.getElementsByTagName('tr');
         let hasResults = false;
         let matches = [];
 
         // Təmizlə düyməsini göstər/gizlət
         clearButton.style.display = searchText ? 'block' : 'none';
 
-        // Əgər axtarış mətni boşdursa
-        if (!cleanSearchText) {
+        // Əgər axtarış mətni boşdursa - bütün sətirləri göstər
+        if (!searchText) {
             for (let i = 1; i < tr.length; i++) {
                 tr[i].style.display = '';
                 const td = tr[i].getElementsByTagName('td')[0];
@@ -60,19 +100,18 @@ function filterUsers() {
             return;
         }
 
-        // Bütün sətirləri yoxla və uyğunluq dərəcəsini hesabla
+        // views.py ilə eyni - bütün sətirləri yoxla
         for (let i = 1; i < tr.length; i++) {
             const td = tr[i].getElementsByTagName('td')[0];
             if (td) {
                 const originalText = td.textContent || td.innerText;
-                const matchLevel = compareTexts(cleanSearchText, originalText);
                 
-                if (matchLevel > 0) {
+                // views.py ilə eyni mantıq: matchesSearch
+                if (matchesSearch(originalText, searchText)) {
                     matches.push({
                         row: tr[i],
                         cell: td,
-                        text: originalText,
-                        level: matchLevel
+                        text: originalText
                     });
                     hasResults = true;
                 } else {
@@ -81,20 +120,26 @@ function filterUsers() {
             }
         }
 
-        // Nəticələri uyğunluq dərəcəsinə görə sırala
-        matches.sort((a, b) => b.level - a.level);
-
-        // Nəticələri göstə
+        // Nəticələri göstər
         matches.forEach(match => {
             match.row.style.display = '';
             
-            // Axtarış sözünü highlight et
+            // Highlight et - axtarış sözlərinin bütün varyasiyalarını
             let displayText = match.text;
-            const searchTerms = cleanSearchText.split('_').filter(Boolean); // "_" simvolu ilə ayrılmış sözləri al
+            const searchWords = getSearchWords(searchText);
             
-            searchTerms.forEach(term => {
-                const regex = new RegExp(`(${term})`, 'gi');
-                displayText = displayText.replace(regex, '<span class="highlight">$1</span>');
+            // Hər sözün varyasiyalarını highlight et
+            const highlightedWords = new Set();
+            searchWords.forEach(word => {
+                const variations = normalizeAzerbaijaniChars(word);
+                variations.forEach(variation => {
+                    if (variation && !highlightedWords.has(variation)) {
+                        highlightedWords.add(variation);
+                        // Case-insensitive highlight
+                        const regex = new RegExp(`\\b(${variation})\\b`, 'gi');
+                        displayText = displayText.replace(regex, '<span class="highlight">$1</span>');
+                    }
+                });
             });
             
             match.cell.innerHTML = displayText;
@@ -107,6 +152,7 @@ function filterUsers() {
 
 function clearSearch() {
     const input = document.getElementById('userSearch');
+    if (!input) return;
     input.value = '';
     filterUsers();
     input.focus();
@@ -115,7 +161,8 @@ function clearSearch() {
 // Event listener-ləri əlavə et
 document.addEventListener('DOMContentLoaded', function() {
     const input = document.getElementById('userSearch');
-    
+    if (!input) return; // don't attach handlers when input not present
+
     // Enter düyməsinə basıldıqda səhifənin yenilənməsinin qarşısını al
     input.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
@@ -130,11 +177,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Input-a yazıldıqda avtomatik böyük hərfə çevir və yalnız icazə verilən simvolları saxla
+    // Input-a yazıldıqda yalnız icazə verilən simvolları saxla (views.py ilə uyumlu)
     input.addEventListener('input', function() {
-        let value = this.value.toUpperCase();
-        // Yalnız hərflər, rəqəmlər, Azərbaycan hərfləri və "_" simvoluna icazə ver
-        value = value.replace(/[^A-ZƏÇŞÖĞÜİ0-9_]/g, '');
+        let value = this.value;
+        // Yalnız hərflər, rəqəmlər, Azərbaycan hərfləri və boşluq simvoluna icazə ver
+        value = value.replace(/[^a-zA-ZəƏçÇşŞöÖğĞüÜıİ0-9 ]/g, '');
         this.value = value;
     });
 });
@@ -198,14 +245,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Ümumi statistikadakı borc məbləğini yoxla və sinif əlavə et
     const totalDebtItem = document.querySelector('.stats-item.debt');
-    const totalDebtAmount = parseFloat(totalDebtItem.querySelector('span').textContent.replace('₼', '').trim());
-    
-    if (totalDebtAmount > 0) {
-        totalDebtItem.classList.add('positive');
-    } else if (totalDebtAmount < 0) {
-        totalDebtItem.classList.add('negative');
-    } else {
-        totalDebtItem.classList.add('zero');
+    if (totalDebtItem) {
+        const span = totalDebtItem.querySelector('span');
+        if (span) {
+            const totalDebtAmount = parseFloat(span.textContent.replace('₼', '').trim()) || 0;
+            if (totalDebtAmount > 0) {
+                totalDebtItem.classList.add('positive');
+            } else if (totalDebtAmount < 0) {
+                totalDebtItem.classList.add('negative');
+            } else {
+                totalDebtItem.classList.add('zero');
+            }
+        }
     }
 });
 
